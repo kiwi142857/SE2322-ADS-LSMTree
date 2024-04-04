@@ -6,6 +6,9 @@ class KVStore : public KVStoreAPI
 {
 	// You can add your implementation here
 private:
+	 MemTable *memtable;
+	// std::string dir;
+	// std::string vlog;
 public:
 	KVStore(const std::string &dir, const std::string &vlog);
 

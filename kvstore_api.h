@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <list>
+#include "./MemTable/memTable.h"
 
 class KVStoreAPI
 {
