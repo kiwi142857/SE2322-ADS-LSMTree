@@ -1,6 +1,6 @@
 #include "bloomFilter.h"
 
-void gen_bloom_filter(std::vector<uint64_t> &nums, std::vector<bool> &bloom_filter, int num_hashes = 4, int num_bits = 8192) {
+void gen_bloom_filter(std::vector<uint64_t> &nums, std::vector<bool> &bloom_filter, int num_hashes, int num_bits) {
     for (int i = 0; i < nums.size(); i++) {
         for (int j = 0; j < num_hashes; j++) {
             uint64_t hash[2];
@@ -10,7 +10,7 @@ void gen_bloom_filter(std::vector<uint64_t> &nums, std::vector<bool> &bloom_filt
     }
 }
 
-bool check_bloom_filter(std::vector<uint64_t> &nums, std::vector<bool> &bloom_filter, int num_hashes = 4) {
+bool check_bloom_filter(std::vector<uint64_t> &nums, std::vector<bool> &bloom_filter, int num_hashes) {
     for (int i = 0; i < nums.size(); i++) {
         bool found = true;
         for (int j = 0; j < num_hashes; j++) {
@@ -28,7 +28,7 @@ bool check_bloom_filter(std::vector<uint64_t> &nums, std::vector<bool> &bloom_fi
     return true;
 }
 
-bool check_bloom_filter(uint64_t num, std::vector<bool> &bloom_filter, int num_hashes = 4) {
+bool check_bloom_filter(uint64_t num, std::vector<bool> &bloom_filter, int num_hashes) {
     bool found = true;
     for (int j = 0; j < num_hashes; j++) {
         uint64_t hash[2];

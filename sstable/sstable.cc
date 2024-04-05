@@ -58,7 +58,8 @@ void Sstable::output(std::string filename) {
     out.write((char *)&largestKey, sizeof(largestKey));
     out.write((char *)&smallestKey, sizeof(smallestKey));
     for (int i = 0; i < bloomFilter.size(); i++) {
-        out.write((char *)&bloomFilter[i], sizeof(bloomFilter[i]));
+        auto temp = bloomFilter[i];
+        out.write((char *)&temp, sizeof(temp));
     }
     for (int i = 0; i < keyOffsetTable.size(); i++) {
         out.write((char *)&std::get<0>(keyOffsetTable[i]), sizeof(std::get<0>(keyOffsetTable[i])));

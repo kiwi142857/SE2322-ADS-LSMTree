@@ -91,7 +91,7 @@ void skiplist_type::print()
 } // namespace skiplist
 
 /* return nullptr if nn element satisfied */
-void skiplist_type::scan(key_type start, key_type end, std::list<std::pair<uint64_t, std::string>>& list)
+void skiplist_type::scan(key_type start, key_type end, std::list<std::pair<uint64_t, std::string>> &list)
 {
     // get the start node
     Node *start_node = head;
@@ -104,14 +104,13 @@ void skiplist_type::scan(key_type start, key_type end, std::list<std::pair<uint6
     if (start_node == nullptr || start_node->key > end) {
         return;
     }
-    
+
     Node *node = start_node;
     // add the key and value of node whose key is in [start, end] to the list
     while (node != nullptr && node->key <= end) {
         list.emplace_back(std::make_pair(node->key, node->value));
         node = node->forward[0];
     }
-
 }
 
 bool skiplist_type::del(key_type key)
@@ -196,8 +195,8 @@ void skiplist_type::getList(std::list<std::pair<key_type, value_type>> &list)
         list.emplace_back(std::make_pair(node->key, node->value));
         node = node->forward[0];
     }
+}
 } // namespace skiplist
-
 /*
 int main()
 {

@@ -5,6 +5,10 @@
 #include <list>
 #include "./MemTable/memTable.h"
 
+#define kb 1024
+#define mb 1024 * kb
+#define gb 1024 * mb
+
 class KVStoreAPI
 {
 public:

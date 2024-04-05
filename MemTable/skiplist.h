@@ -53,6 +53,8 @@ class skiplist_type
     void getList(std::list<std::pair<key_type, value_type>> &list);
     void scan(key_type start, key_type end, std::list<std::pair<key_type, value_type>> &list);
     ~skiplist_type();
+    uint32_t getSize(){return size;}
+    void setSize(uint32_t size){this->size = size;}
 	void print();
 };
 
