@@ -178,7 +178,19 @@ int test()
     std::cout << dis_sum << std::endl;
     return 0;
 }
+
+skiplist_type::~skiplist_type()
+{
+    Node *node = head;
+    while (node != nullptr) {
+        Node *tmp = node;
+        node = node->forward[0];
+        delete tmp;
+    }
 }
+
+} // namespace skiplist
+
 /*
 int main()
 {

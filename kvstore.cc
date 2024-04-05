@@ -1,5 +1,7 @@
 #include "kvstore.h"
 #include <string>
+#include "bloomFilter/bloomFilter.h"
+#include "sstable/sstable.h"
 
 KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
 {
@@ -33,7 +35,9 @@ std::string KVStore::get(uint64_t key)
  */
 bool KVStore::del(uint64_t key)
 {
-	return memtable->del(key);
+	if(memtable->del(key))
+		return true;
+	return false;
 }
 
 /**
@@ -61,3 +65,8 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
 void KVStore::gc(uint64_t chunk_size)
 {
 }
+
+void KVStore::convertMemTableToSSTable()
+{	
+	
+}	

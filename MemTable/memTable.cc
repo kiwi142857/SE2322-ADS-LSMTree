@@ -35,4 +35,11 @@ void MemTable::scan(uint64_t start, uint64_t end, std::list<std::pair<uint64_t, 
     skiplist->scan(start, end, list);
     return;
 }
+
+void MemTable::clean()
+{
+    delete skiplist;
+    skiplist = new skiplist::skiplist_type();
+    return;
+}
 // Path: MemTable/memTable.h
