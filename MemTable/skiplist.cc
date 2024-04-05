@@ -189,6 +189,13 @@ skiplist_type::~skiplist_type()
     }
 }
 
+void skiplist_type::getList(std::list<std::pair<key_type, value_type>> &list)
+{
+    Node *node = head->forward[0];
+    while (node != nullptr) {
+        list.emplace_back(std::make_pair(node->key, node->value));
+        node = node->forward[0];
+    }
 } // namespace skiplist
 
 /*

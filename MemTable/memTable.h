@@ -15,6 +15,7 @@ class MemTable
     void print();
     void scan(uint64_t start, uint64_t end, std::list<std::pair<uint64_t, std::string>> &list);
     void clean();
+    void getList(std::list<std::pair<uint64_t, std::string>> &list);
   private:
     skiplist::skiplist_type *skiplist;
 };

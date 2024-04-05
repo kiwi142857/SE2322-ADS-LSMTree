@@ -50,6 +50,7 @@ class skiplist_type
     bool del(key_type key);
     // for hw1 only
     int query_distance(key_type key) const;
+    void getList(std::list<std::pair<key_type, value_type>> &list);
     void scan(key_type start, key_type end, std::list<std::pair<key_type, value_type>> &list);
     ~skiplist_type();
 	void print();

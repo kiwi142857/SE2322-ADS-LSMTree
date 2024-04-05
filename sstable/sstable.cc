@@ -9,6 +9,11 @@ Sstable::Sstable(uint64_t timeId, uint64_t pairNum, uint64_t largestKey, uint64_
     order = 0;
 }
 
+Sstable::Sstable() {
+    level = 0;
+    order = 0;
+}
+
 uint64_t Sstable::getTimeId() {
     return timeId;
 }

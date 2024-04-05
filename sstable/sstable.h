@@ -16,6 +16,7 @@ class Sstable {
 
     public:
         Sstable(uint64_t timeId, uint64_t pairNum, uint64_t largestKey, uint64_t smallestKey, std::vector<bool> bloomFilter, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable);
+        Sstable();
         uint64_t getTimeId();
         uint64_t getPairNum();
         uint64_t getLargestKey();

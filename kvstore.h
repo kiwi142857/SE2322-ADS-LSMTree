@@ -10,7 +10,9 @@ private:
 	MemTable *memtable;
 	// std::string dir;
 	// std::string vlog;
+	Sstable *kvSStable;
 
+	uint64_t timeId;
 public:
 	KVStore(const std::string &dir, const std::string &vlog);
 

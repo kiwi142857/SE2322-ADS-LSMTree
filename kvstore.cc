@@ -3,7 +3,7 @@
 #include "bloomFilter/bloomFilter.h"
 #include "sstable/sstable.h"
 
-KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
+KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog), timeId(0)
 {
 	memtable = new MemTable();
 }
@@ -68,5 +68,12 @@ void KVStore::gc(uint64_t chunk_size)
 
 void KVStore::convertMemTableToSSTable()
 {	
-	
+	std::list<std::pair<uint64_t, std::string>> list;
+	memtable->getList(list);
+	uint64_t pairNum = list.size();
+	if(pairNum == 0)
+		return;
+	uint64_t maxKey = list.back().first;
+	uint64_t minKey = list.front().first;
+	std::string fileName = std::string("./data") + "/level0/" + std::to_string(timeId) + ".sst";
 }	

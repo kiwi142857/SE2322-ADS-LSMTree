@@ -42,4 +42,10 @@ void MemTable::clean()
     skiplist = new skiplist::skiplist_type();
     return;
 }
+
+void MemTable::getList(std::list<std::pair<uint64_t, std::string>> &list)
+{
+    skiplist->getList(list);
+    return;
+}
 // Path: MemTable/memTable.h
