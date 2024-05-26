@@ -26,5 +26,5 @@ class Sstable {
         std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> getKeyOffsetTable();
         bool checkBloomFilter(uint64_t num, int num_hashes = 4);
         std::tuple<uint64_t, uint32_t> getOffset(uint64_t key);
-        void output(std::string filename);
+        void output(std::fstream &file);
 };

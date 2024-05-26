@@ -51,8 +51,7 @@ std::tuple<uint64_t, uint32_t> Sstable::getOffset(uint64_t key) {
     return std::make_tuple(0, 0);
 }
 
-void Sstable::output(std::string filename) {
-    std::ofstream out(filename, std::ios::binary);
+void Sstable::output(std::fstream &out) {
     out.write((char *)&timeId, sizeof(timeId));
     out.write((char *)&pairNum, sizeof(pairNum));
     out.write((char *)&largestKey, sizeof(largestKey));

@@ -1,17 +1,18 @@
 #include "kvstore.h"
-#include <string>
+#include "./vLog/vLog.h"
 #include "bloomFilter/bloomFilter.h"
 #include "sstable/sstable.h"
-#include "./vLog/vLog.h"
+#include <string>
+#include "utils.h"
 
 KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog), timeId(0)
 {
-	memtable = new MemTable();
+    memtable = new MemTable();
 }
 
 KVStore::~KVStore()
 {
-	delete memtable;
+    delete memtable;
 }
 
 /**
@@ -20,13 +21,12 @@ KVStore::~KVStore()
  */
 void KVStore::put(uint64_t key, const std::string &s)
 {
-	memtable->put(key, s);
-	if(memtable->getSize() >= MEMTABLE_THRESHOLD)
-	{
-		convertMemTableToSSTable();
-		// memtable->clean();
-		memtable->setSize(0);
-	}
+    memtable->put(key, s);
+    if (memtable->getSize() >= MEMTABLE_THRESHOLD) {
+        convertMemTableToSSTable();
+        // memtable->clean();
+        memtable->setSize(0);
+    }
 }
 /**
  * Returns the (string) value of the given key.
@@ -34,7 +34,7 @@ void KVStore::put(uint64_t key, const std::string &s)
  */
 std::string KVStore::get(uint64_t key)
 {
-	return memtable->get(key);
+    return memtable->get(key);
 }
 /**
  * Delete the given key-value pair if it exists.
@@ -42,9 +42,9 @@ std::string KVStore::get(uint64_t key)
  */
 bool KVStore::del(uint64_t key)
 {
-	if(memtable->del(key))
-		return true;
-	return false;
+    if (memtable->del(key))
+        return true;
+    return false;
 }
 
 /**
@@ -62,7 +62,7 @@ void KVStore::reset()
  */
 void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string>> &list)
 {
-	memtable->scan(key1, key2, list);
+    memtable->scan(key1, key2, list);
 }
 
 /**
@@ -74,44 +74,48 @@ void KVStore::gc(uint64_t chunk_size)
 }
 
 void KVStore::convertMemTableToSSTable()
-{	
-	// open the vlog file
+{
+    // open the vlog file
 
-	std::fstream vlogFile("./data/vlog", std::ios::in | std::ios::out | std::ios::binary);
-	std::list<std::pair<uint64_t, std::string>> list;
-	memtable->getList(list);
-	uint64_t pairNum = list.size();
-	if(pairNum == 0)
-		return;
-	uint64_t maxKey = list.back().first;
-	uint64_t minKey = list.front().first;
-	std::vector<bool> bloomFilter;
-	bloomFilter.resize(8 * kb);
-	std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable;
-	// store the key value into vlog
-	std::list<std::pair<vLogEntry, uint64_t>> entries;
-	for(auto &pair : list)
-	{
-		vLogEntry entry(pair.first, pair.second);
-		entries.push_back(std::make_pair(entry, 0));
-	}
-	vLog::append(entries, vlogFile);
-	// store the key and offset into sstable and the offset will be the offset in vlog, which is the second element in the pair
-	for(auto &entry : entries)
-	{
-		keyOffsetTable.push_back(std::make_tuple(entry.first.key, entry.second, entry.first.size));
-	}
-	// store the bloom filter
-	// get the list of keys
-	std::vector<uint64_t> keys;
-	for(auto &pair : list)
-	{
-		keys.push_back(pair.first);
-	}
-	gen_bloom_filter(keys, bloomFilter);
-	// store the sstable
-	Sstable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
-	std::string filename = "./data/sstable/" + std::to_string(timeId) + ".sst";
-	sstable.output(filename);
-	timeId++;
-}	
+    std::fstream vlogFile("./data/vlog", std::ios::in | std::ios::out | std::ios::binary);
+    std::list<std::pair<uint64_t, std::string>> list;
+    memtable->getList(list);
+    uint64_t pairNum = list.size();
+    if (pairNum == 0)
+        return;
+    uint64_t maxKey = list.back().first;
+    uint64_t minKey = list.front().first;
+    std::vector<bool> bloomFilter;
+    bloomFilter.resize(8 * kb);
+    std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable;
+    // store the key value into vlog
+    std::list<std::pair<vLogEntry, uint64_t>> entries;
+    for (auto &pair : list) {
+        vLogEntry entry(pair.first, pair.second);
+        entries.push_back(std::make_pair(entry, 0));
+    }
+    vLog::append(entries, vlogFile);
+    vlogFile.flush();
+
+    // store the key and offset into sstable and the offset will be the offset in vlog, which is the second element in
+    // the pair
+    for (auto &entry : entries) {
+        keyOffsetTable.push_back(std::make_tuple(entry.first.key, entry.second, entry.first.size));
+    }
+    // store the sstable
+    Sstable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
+
+    // Create directory if it doesn't exist
+    std::string dirPath = "./data/sstable/level0";
+    if (!utils::dirExists(dirPath)) {
+        if (utils::mkdir(dirPath) != 0) {
+            std::cerr << "Failed to create directory: " << dirPath << std::endl;
+            return ; // Or handle error appropriately
+        }
+    }
+
+    std::string filename = dirPath + std::to_string(timeId) + ".sst";
+    std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
+    sstable.output(sstableFile);
+    timeId++;
+}
