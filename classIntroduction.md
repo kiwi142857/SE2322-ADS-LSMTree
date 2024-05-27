@@ -48,6 +48,7 @@ do_alloc_file()
 
 ### MemTable
 
+1. 构造函数
 析构函数 ~MemTable
 
 ### SSTable

@@ -14,8 +14,8 @@ class MemTable
     void put(uint64_t key, const std::string &val);
     std::string get(uint64_t key) const;
     bool del(uint64_t key);
-    void print();
     void scan(uint64_t start, uint64_t end, std::list<std::pair<uint64_t, std::string>> &list);
+    void print();
     void clean();
     void getList(std::list<std::pair<uint64_t, std::string>> &list);
     uint32_t getSize(){return skiplist->getSize();}
