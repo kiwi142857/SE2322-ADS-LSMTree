@@ -22,11 +22,11 @@ KVStore::~KVStore()
 void KVStore::put(uint64_t key, const std::string &s)
 {
     memtable->put(key, s);
-    if (memtable->getSize() >= MEMTABLE_THRESHOLD) {
-        convertMemTableToSSTable();
-        // memtable->clean();
-        memtable->setSize(0);
-    }
+    /* if (memtable->getSize() >= MEMTABLE_THRESHOLD) {
+        // convertMemTableToSSTable();
+        memtable->clean();
+        // memtable->setSize(0);
+    } */
 }
 /**
  * Returns the (string) value of the given key.
