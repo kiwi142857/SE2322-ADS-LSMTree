@@ -17,7 +17,9 @@ void MemTable::put(uint64_t key, const std::string &val)
 
 std::string MemTable::get(uint64_t key) const
 {
-    return skiplist->get(key);
+    std::string value = skiplist->get(key);
+    
+    return value;
 }
 
 bool MemTable::del(uint64_t key)

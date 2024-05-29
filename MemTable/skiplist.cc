@@ -25,7 +25,7 @@ void skiplist_type::put(key_type key, const value_type &val)
         node->value = val;
     } else {
         int level = random_level();
-        
+
         node = new Node(key, val, level);
         for (int i = 0; i < level; i++) {
             node->forward[i] = update[i]->forward[i];
@@ -125,12 +125,17 @@ skiplist_type::~skiplist_type()
     }
 }
 
-void skiplist_type::getList(std::list<std::pair<key_type, value_type>> &list) 
+void skiplist_type::getList(std::list<std::pair<key_type, value_type>> &list)
 {
     Node *node = head->forward[0];
     while (node != nullptr) {
         list.emplace_back(std::make_pair(node->key, node->value));
         node = node->forward[0];
     }
+}
+
+void skiplist_type::addDeletedKey(key_type key)
+{
+    this->put(key, "~DELETED~");
 }
 } // namespace skiplist

@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <vector>
 #include <tuple>
+#include <list>
 
 class SSTable {
 
@@ -39,4 +40,5 @@ class SSTable {
         // output the sstable to a file
         void output(std::fstream &file);
 
+        void scanOffset(uint64_t start, uint64_t end, std::list<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList);
 };

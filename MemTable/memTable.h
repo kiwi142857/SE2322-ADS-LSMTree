@@ -19,6 +19,7 @@ class MemTable
     void getList(std::list<std::pair<uint64_t, std::string>> &list);
     uint32_t getSize(){return skiplist->getSize();}
     void setSize(uint32_t size){skiplist->setSize(size);}
+    void addDeletedKey(uint64_t key){skiplist->addDeletedKey(key);}
   private:
     skiplist::skiplist_type *skiplist;
 };

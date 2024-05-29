@@ -60,6 +60,7 @@ class skiplist_type
         this->size = size;
     }
     void print();
+    void addDeletedKey(key_type key);
 };
 
 } // namespace skiplist

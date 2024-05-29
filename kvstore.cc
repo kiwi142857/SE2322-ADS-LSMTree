@@ -9,12 +9,10 @@
 
 KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
 {
-    
 }
 
 KVStore::~KVStore()
 {
-    
 }
 
 /**
@@ -37,9 +35,13 @@ void KVStore::put(uint64_t key, const std::string &s)
 std::string KVStore::get(uint64_t key)
 {
     std::string value = memtable.get(key);
-    if(value != "")
+    if (value != "" && value != "~DELETED~")
         return value;
-        
+    if(value == "~DELETED~")
+    {
+        return "";
+    }
+
     return sstables.get(key);
 }
 /**
@@ -48,9 +50,12 @@ std::string KVStore::get(uint64_t key)
  */
 bool KVStore::del(uint64_t key)
 {
-    if (memtable.del(key))
-        return true;
-    return false;
+    if(get(key) == "")
+    {
+        return false;
+    }
+    put(key, "~DELETED~");
+    return true;
 }
 
 /**
@@ -59,6 +64,9 @@ bool KVStore::del(uint64_t key)
  */
 void KVStore::reset()
 {
+    memtable.clean();
+
+    sstables.reset();
 }
 
 /**
@@ -68,6 +76,7 @@ void KVStore::reset()
  */
 void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string>> &list)
 {
+    sstables.scan(key1, key2, list);
     memtable.scan(key1, key2, list);
 }
 
