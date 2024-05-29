@@ -3,67 +3,73 @@
 #include <iostream>
 #include <fstream>
 
-Sstable::Sstable(uint64_t timeId, uint64_t pairNum, uint64_t largestKey, uint64_t smallestKey, std::vector<bool> bloomFilter, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable)
-: timeId(timeId), pairNum(pairNum), largestKey(largestKey), smallestKey(smallestKey), bloomFilter(bloomFilter), keyOffsetTable(keyOffsetTable) {
+SSTable::SSTable(uint64_t timeId, uint64_t pairNum, uint64_t largestKey, uint64_t smallestKey, std::vector<bool> bloomFilter, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> item)
+: timeId(timeId), pairNum(pairNum), largestKey(largestKey), smallestKey(smallestKey), bloomFilter(bloomFilter), item(item) {
     level = 0;
-    order = 0;
 }
 
-Sstable::Sstable() {
+SSTable::SSTable() {
     level = 0;
-    order = 0;
+    
 }
 
-uint64_t Sstable::getTimeId() {
+uint64_t SSTable::getTimeId() {
     return timeId;
 }
 
-uint64_t Sstable::getPairNum() {
+uint64_t SSTable::getPairNum() {
     return pairNum;
 }
 
-uint64_t Sstable::getLargestKey() {
+uint64_t SSTable::getLargestKey() {
     return largestKey;
 }
 
-uint64_t Sstable::getSmallestKey() {
+uint64_t SSTable::getSmallestKey() {
     return smallestKey;
 }
 
-std::vector<bool> Sstable::getBloomFilter() {
+std::vector<bool> SSTable::getBloomFilter() {
     return bloomFilter;
 }
 
-std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> Sstable::getKeyOffsetTable() {
-    return keyOffsetTable;
+std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> SSTable::getItem() {
+    return item;
 }
 
-bool Sstable::checkBloomFilter(uint64_t num, int num_hashes) {
+bool SSTable::checkBloomFilter(uint64_t num, int num_hashes) {
     return check_bloom_filter(num, bloomFilter, num_hashes);
 }
 
-std::tuple<uint64_t, uint32_t> Sstable::getOffset(uint64_t key) {
-    for (int i = 0; i < keyOffsetTable.size(); i++) {
-        if (std::get<0>(keyOffsetTable[i]) == key) {
-            return std::make_tuple(std::get<1>(keyOffsetTable[i]), std::get<2>(keyOffsetTable[i]));
+// TODO：修改为二分查找
+std::tuple<uint64_t, uint64_t, uint32_t> SSTable::getOffset(uint64_t key) {
+    for (size_t i = 0; i < item.size(); i++) {
+        if (std::get<0>(item[i]) == key) {
+            return item[i];
         }
     }
-    return std::make_tuple(0, 0);
+    return std::make_tuple(0, 0, 0);
 }
 
-void Sstable::output(std::fstream &out) {
+void SSTable::output(std::fstream &out) {
+
+    // 写入Header
     out.write((char *)&timeId, sizeof(timeId));
     out.write((char *)&pairNum, sizeof(pairNum));
     out.write((char *)&largestKey, sizeof(largestKey));
     out.write((char *)&smallestKey, sizeof(smallestKey));
+
+    // 写入BloomFilter
     for (int i = 0; i < bloomFilter.size(); i++) {
         auto temp = bloomFilter[i];
         out.write((char *)&temp, sizeof(temp));
     }
-    for (int i = 0; i < keyOffsetTable.size(); i++) {
-        out.write((char *)&std::get<0>(keyOffsetTable[i]), sizeof(std::get<0>(keyOffsetTable[i])));
-        out.write((char *)&std::get<1>(keyOffsetTable[i]), sizeof(std::get<1>(keyOffsetTable[i])));
-        out.write((char *)&std::get<2>(keyOffsetTable[i]), sizeof(std::get<2>(keyOffsetTable[i])));
+
+    // 写入item
+    for (int i = 0; i < item.size(); i++) {
+        out.write((char *)&std::get<0>(item[i]), sizeof(std::get<0>(item[i])));
+        out.write((char *)&std::get<1>(item[i]), sizeof(std::get<1>(item[i])));
+        out.write((char *)&std::get<2>(item[i]), sizeof(std::get<2>(item[i])));
     }
     out.close();
 }

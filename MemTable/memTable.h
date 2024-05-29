@@ -4,7 +4,6 @@
 #include "../bloomFilter/bloomFilter.h"
 #include "../sstable/sstable.h"
 
-#define MEMTABLE_THRESHOLD 4080
 
 class MemTable
 {

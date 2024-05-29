@@ -43,7 +43,7 @@ void MemTable::clean()
     return;
 }
 
-void MemTable::getList(std::list<std::pair<uint64_t, std::string>> &list)
+void MemTable::getList(std::list<std::pair<uint64_t, std::string>> &list) 
 {
     skiplist->getList(list);
     return;

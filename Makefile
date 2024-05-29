@@ -4,10 +4,11 @@ CXX = g++
 
 all: correctness persistence
 
-correctness: kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o
-	$(LINK.o) -o correctness kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o
-persistence: kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o
-	$(LINK.o) -o persistence kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o
+correctness: kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+	$(LINK.o) -o correctness kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+
+persistence: kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+	$(LINK.o) -o persistence kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
 
 kvstore.o: kvstore.cc
 	$(CXX) $(CXXFLAGS) -g -c kvstore.cc
@@ -32,6 +33,9 @@ sstable.o: ./sstable/sstable.cc
 
 bloomFilter.o: ./bloomFilter/bloomFilter.cc
 	$(CXX) $(CXXFLAGS) -g -c ./bloomFilter/bloomFilter.cc
+
+SSTableHandler.o: ./SSTableHandler/SSTableHandler.cc
+	$(CXX) $(CXXFLAGS) -g -c ./SSTableHandler/SSTableHandler.cc
 
 clean:
 	-rm -f correctness persistence *.o

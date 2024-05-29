@@ -2,17 +2,17 @@
 
 #include "kvstore_api.h"
 #include "./sstable/sstable.h"
+#include "./SSTableHandler/SSTableHandler.h"
 
 class KVStore : public KVStoreAPI
 {
 	// You can add your implementation here
 private:
-	MemTable *memtable;
+	MemTable memtable;
 	// std::string dir;
 	// std::string vlog;
-	Sstable *kvSStable;
+	SSTableHandler sstables;
 
-	uint64_t timeId;
 public:
 	KVStore(const std::string &dir, const std::string &vlog);
 
@@ -30,28 +30,5 @@ public:
 
 	void gc(uint64_t chunk_size) override;
 
-	// void recover();
-
-	// void loadSSTable();
-
-	// void mergeSSTable();
-
-	// void compact();
-
-	// void split();
-
-	// void writeLog();
-
-	// void readLog();
-
-	void convertMemTableToSSTable();
-
-	void writeSSTable();
-
-	// void readSSTable();
-
-	// void writeMemTable();
-
-	// void readMemTable();
-
+	// void convertMemTableToSSTable();
 };

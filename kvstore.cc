@@ -2,17 +2,19 @@
 #include "./vLog/vLog.h"
 #include "bloomFilter/bloomFilter.h"
 #include "sstable/sstable.h"
-#include <string>
 #include "utils.h"
+#include <string>
 
-KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog), timeId(0)
+#define MEMTABLE_THRESHOLD 51
+
+KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
 {
-    memtable = new MemTable();
+    
 }
 
 KVStore::~KVStore()
 {
-    delete memtable;
+    
 }
 
 /**
@@ -21,12 +23,12 @@ KVStore::~KVStore()
  */
 void KVStore::put(uint64_t key, const std::string &s)
 {
-    memtable->put(key, s);
-    /* if (memtable->getSize() >= MEMTABLE_THRESHOLD) {
-        // convertMemTableToSSTable();
-        memtable->clean();
-        // memtable->setSize(0);
-    } */
+    memtable.put(key, s);
+    if (memtable.getSize() >= MEMTABLE_THRESHOLD) {
+        sstables.convertMemTableToSSTable(memtable);
+        memtable.clean();
+        memtable.setSize(0);
+    }
 }
 /**
  * Returns the (string) value of the given key.
@@ -34,7 +36,11 @@ void KVStore::put(uint64_t key, const std::string &s)
  */
 std::string KVStore::get(uint64_t key)
 {
-    return memtable->get(key);
+    std::string value = memtable.get(key);
+    if(value != "")
+        return value;
+        
+    return sstables.get(key);
 }
 /**
  * Delete the given key-value pair if it exists.
@@ -42,7 +48,7 @@ std::string KVStore::get(uint64_t key)
  */
 bool KVStore::del(uint64_t key)
 {
-    if (memtable->del(key))
+    if (memtable.del(key))
         return true;
     return false;
 }
@@ -62,18 +68,18 @@ void KVStore::reset()
  */
 void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string>> &list)
 {
-    memtable->scan(key1, key2, list);
+    memtable.scan(key1, key2, list);
 }
 
 /**
  * This reclaims space from vLog by moving valid value and discarding invalid value.
- * chunk_size is the size in byte you should AT LEAST recycle.
+ * chunk_size is the vlen in byte you should AT LEAST recycle.
  */
 void KVStore::gc(uint64_t chunk_size)
 {
 }
 
-void KVStore::convertMemTableToSSTable()
+/* void KVStore::convertMemTableToSSTable()
 {
     // open the vlog file
 
@@ -100,17 +106,17 @@ void KVStore::convertMemTableToSSTable()
     // store the key and offset into sstable and the offset will be the offset in vlog, which is the second element in
     // the pair
     for (auto &entry : entries) {
-        keyOffsetTable.push_back(std::make_tuple(entry.first.key, entry.second, entry.first.size));
+        keyOffsetTable.push_back(std::make_tuple(entry.first.key, entry.second, entry.first.vlen));
     }
     // store the sstable
-    Sstable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
+    SSTable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
 
     // Create directory if it doesn't exist
     std::string dirPath = "./data/sstable/level0";
     if (!utils::dirExists(dirPath)) {
         if (utils::mkdir(dirPath) != 0) {
             std::cerr << "Failed to create directory: " << dirPath << std::endl;
-            return ; // Or handle error appropriately
+            return; // Or handle error appropriately
         }
     }
 
@@ -119,3 +125,4 @@ void KVStore::convertMemTableToSSTable()
     sstable.output(sstableFile);
     timeId++;
 }
+ */

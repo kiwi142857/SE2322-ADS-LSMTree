@@ -12,7 +12,8 @@
 ### KVStore
 
 1. PUT(Key, Value)
-调用MemTable的PUT
+调用MemTable的PUT并查看size，
+    if size大于预定值则调用SSTablehandler的转换函数。
 
 2. GET(Key)
 调用MemTable的GET
@@ -49,7 +50,7 @@ do_alloc_file()
 ### MemTable
 
 1. 构造函数
-析构函数 ~MemTable
+2. 析构函数 ~MemTable
 
 ### SSTable
 
@@ -57,3 +58,7 @@ do_alloc_file()
 - 逐层查找SSTable：先判断maxKeyvalue, minKeyValue, then bloomFilter, then 二分查找
             - if found, return value
             - else return empty
+
+### SSTableHandler
+
+1. SSTable convertMemTableToSSTable(const MemTable& memTable);
