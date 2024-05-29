@@ -2,6 +2,8 @@
 
 ./data
 
+data/*
+
 *.o
 
 .gitignore

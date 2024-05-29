@@ -20,6 +20,7 @@ vLog::~vLog()
 void vLog::append(std::list<std::pair<vLogEntry, uint64_t>> &entries, std::fstream &file){
     std::stringstream ss;
     std::streampos filePos = file.tellp();
+    file.seekp(0, std::ios::end);
     for (auto &entry : entries) {
         entry.second = ss.tellp() + filePos; 
         ss.write(&vLogEntry::magic, 1);
