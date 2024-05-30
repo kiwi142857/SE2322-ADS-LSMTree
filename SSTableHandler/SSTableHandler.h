@@ -8,6 +8,8 @@
 #define mb 1024 * kb
 #define gb 1024 * mb
 
+#define MEMTABLE_THRESHOLD 51
+
 class SSTableHandler
 {
     // SSTable objects
@@ -49,6 +51,8 @@ class SSTableHandler
     // Function to perform compaction on a level
     void compact(int level);
 
+    // Function to perform compaction on level 0
+    void compactLevel0();
     
 
 };

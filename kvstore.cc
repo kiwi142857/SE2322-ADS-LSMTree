@@ -5,7 +5,6 @@
 #include "utils.h"
 #include <string>
 
-#define MEMTABLE_THRESHOLD 51
 
 KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
 {

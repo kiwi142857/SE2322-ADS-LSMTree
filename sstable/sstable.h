@@ -24,12 +24,12 @@ class SSTable {
         SSTable();
 
         // get / set functions
-        uint64_t getTimeId();
-        uint64_t getPairNum();
-        uint64_t getLargestKey();
-        uint64_t getSmallestKey();
-        std::vector<bool> getBloomFilter();
-        std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> getItem();
+        uint64_t getTimeId() const;
+        uint64_t getPairNum() const;
+        uint64_t getLargestKey() const;
+        uint64_t getSmallestKey() const;
+        std::vector<bool> getBloomFilter() const;
+        std::vector<std::tuple<uint64_t, uint64_t, uint32_t>>& getItem();
 
         // check if the key is in the bloom filter
         bool checkBloomFilter(uint64_t num, int num_hashes = 4);
