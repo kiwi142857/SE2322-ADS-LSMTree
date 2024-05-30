@@ -61,10 +61,15 @@ void SSTable::output(std::fstream &out) {
     ss.write((char *)&largestKey, sizeof(largestKey));
     ss.write((char *)&smallestKey, sizeof(smallestKey));
 
-    // 写入BloomFilter
-    for (int i = 0; i < bloomFilter.size(); i++) {
-        auto temp = bloomFilter[i];
-        ss.write((char *)&temp, sizeof(temp));
+    // 写入BloomFilter, 8个bool占用一个字节
+    for (int i = 0; i < bloomFilter.size(); i += 8) {
+        char byte = 0;
+        for (int j = 0; j < 8; j++) {
+            if (i + j < bloomFilter.size()) {
+                byte |= (bloomFilter[i + j] << j);
+            }
+        }
+        ss.write(&byte, sizeof(byte));
     }
 
     // 写入item

@@ -17,7 +17,7 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
     uint64_t maxKey = list.back().first;
     uint64_t minKey = list.front().first;
     std::vector<bool> bloomFilter;
-    bloomFilter.resize(8 * kb);
+    bloomFilter.resize(64 * kb);
     gen_bloom_filter(list, bloomFilter);
     std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable;
     // store the key value into vlog
@@ -225,7 +225,7 @@ void SSTableHandler::compactLevel0()
             uint64_t maxKey = std::get<0>(newOffsetList.back());
             uint64_t minKey = std::get<0>(newOffsetList.front());
             std::vector<bool> bloomFilter;
-            bloomFilter.resize(8 * kb);
+            bloomFilter.resize(64 * kb);
             gen_bloom_filter(newOffsetList, bloomFilter);
             SSTable sstable(maxTimeId, pairNum, maxKey, minKey, bloomFilter, newOffsetList);
             newSSTables.push_back(sstable);
@@ -239,7 +239,7 @@ void SSTableHandler::compactLevel0()
         uint64_t maxKey = std::get<0>(newOffsetList.back());
         uint64_t minKey = std::get<0>(newOffsetList.front());
         std::vector<bool> bloomFilter;
-        bloomFilter.resize(8 * kb);
+        bloomFilter.resize(64 * kb);
         gen_bloom_filter(newOffsetList, bloomFilter);
         SSTable sstable(maxTimeId, pairNum, maxKey, minKey, bloomFilter, newOffsetList);
         newSSTables.push_back(sstable);

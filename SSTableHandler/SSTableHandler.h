@@ -8,7 +8,7 @@
 #define mb 1024 * kb
 #define gb 1024 * mb
 
-#define MEMTABLE_THRESHOLD 51
+#define MEMTABLE_THRESHOLD 408
 
 class SSTableHandler
 {
