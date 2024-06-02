@@ -62,3 +62,7 @@ do_alloc_file()
 ### SSTableHandler
 
 1. SSTable convertMemTableToSSTable(const MemTable& memTable);
+
+
+TODO:
+1. remove file dir
