@@ -31,4 +31,8 @@ public:
 	void gc(uint64_t chunk_size) override;
 
 	// void convertMemTableToSSTable();
+
+	void printVLog(int offset){
+		sstables.printVLog(offset);
+	}
 };

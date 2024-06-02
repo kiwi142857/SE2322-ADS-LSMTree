@@ -78,13 +78,13 @@ std::string SSTableHandler::get(uint64_t key)
     // Iterate through the SSTables
     for (int i = 0; i < sstablesSize; i++) {
         // Iterate through the SSTable objects
-        int sstableSize = sstables[i].size()-1;
+        int sstableSize = sstables[i].size() - 1;
         for (int j = sstableSize; j >= 0; j--) {
             // Get the offset of the key in the SSTable
             auto offset = sstables[i][j].getOffset(key);
             if (std::get<0>(offset) == key) {
 
-                if(std::get<2>(offset) == 0) {
+                if (std::get<2>(offset) == 0) {
                     return "";
                 }
 
@@ -94,6 +94,18 @@ std::string SSTableHandler::get(uint64_t key)
                 // Read the value from the vlog file
                 std::string value(std::get<2>(offset), ' ');
                 vlogFile.read(&value[0], std::get<2>(offset));
+
+                // for debug
+                if (key == 1 && value == "  ") {
+                    // print the 0 ~ 2*get<2>(offset) bytes of vlog
+                    vlogFile.seekg(0);
+                    int size = 16 * std::get<2>(offset);
+                    char *buf = new char[size + 1]; // Add 1 for the null terminator
+                    vlogFile.read(buf, size);
+                    buf[size] = '\0'; // Add the null terminator
+                    std::cout << "key: " << key << " value: " << value << " buf: " << buf << std::endl;
+                    delete[] buf; // Don't forget to delete buf when you're done with it
+                }
 
                 return value;
             }
@@ -129,16 +141,15 @@ void SSTableHandler::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint
     // Iterate through the SSTables
     for (int i = 0; i < sstables.size(); i++) {
         // Iterate through the SSTable objects
-        for (int j = sstables[i].size() -1; j >=0 ; j--) {
+        for (int j = sstables[i].size() - 1; j >= 0; j--) {
             // Get the list of key-value pairs from the SSTable
             sstables[i][j].scanOffset(key1, key2, offsetList);
         }
     }
 
     // 将offsetList中按照key递增排序
-    offsetList.sort([](const std::tuple<uint64_t, uint64_t, uint32_t> &a, const std::tuple<uint64_t, uint64_t, uint32_t> &b) {
-        return std::get<0>(a) < std::get<0>(b);
-    });
+    offsetList.sort([](const std::tuple<uint64_t, uint64_t, uint32_t> &a,
+                       const std::tuple<uint64_t, uint64_t, uint32_t> &b) { return std::get<0>(a) < std::get<0>(b); });
 
     // Iterate through the offsetList
     for (auto &offset : offsetList) {
@@ -174,7 +185,7 @@ void SSTableHandler::compactLevel0()
     // 在Level1层中找到与此区间相交的SSTable，并将它们从原来的位置删除
     std::vector<SSTable> level1SSTables;
     // 当Level1 存在时
-    if(sstables.size() == 1) {
+    if (sstables.size() == 1) {
         sstables.push_back({});
     }
     for (auto it = sstables[1].begin(); it != sstables[1].end();) {
@@ -212,7 +223,7 @@ void SSTableHandler::compactLevel0()
             keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
         }
     }
-    //获取最大时间戳
+    // 获取最大时间戳
     uint64_t maxTimeId = allSSTables.back().get().getTimeId();
 
     // 生成新的SSTable,每个SSTable的大小不超过16KB,即item数不超过MEMTABLE_THRESHOLD，且每个SSTable的键值区间不重叠
@@ -253,7 +264,7 @@ void SSTableHandler::compactLevel0()
             return;
         }
     }
-    
+
     // use utils::scanDir to get the largest sstable file number
     std::vector<std::string> files;
     utils::scanDir("./data/sstable/sstable1", files);
@@ -291,4 +302,4 @@ void SSTableHandler::compactLevel0()
     });
 
     sstables[0].clear();
-}   
+}

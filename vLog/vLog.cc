@@ -35,10 +35,12 @@ void vLog::append(std::list<std::pair<vLogEntry, uint64_t>> &entries, std::fstre
         ss.write((char *)&entry.first.vlen, sizeof(entry.first.vlen));
         ss.write(&entry.first.value[0], entry.first.vlen);
     }
-    file.seekp(0, std::ios::end); 
-    file << ss.rdbuf();
+    if(!ss.str().empty())
+    {
+        file.seekp(0, std::ios::end); 
+        file << ss.rdbuf();
+    }
 }
-
 std::string vLog::get(uint64_t offset, std::fstream &file)
 {
     file.seekg(offset);

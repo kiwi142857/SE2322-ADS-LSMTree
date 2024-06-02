@@ -1,6 +1,7 @@
 #pragma once
 #include "../MemTable/memTable.h"
 #include "../sstable/sstable.h"
+#include "../vLog/vLog.h"
 #include <optional>
 #include <vector>
 
@@ -53,6 +54,33 @@ class SSTableHandler
 
     // Function to perform compaction on level 0
     void compactLevel0();
-    
 
+    void printVLog(int offset)
+    {
+        // Save the current position
+        vlogFile.seekg(offset);
+        char magic;
+        vlogFile.read(&magic, 1);
+
+        vLogEntry entry;
+        vlogFile.read((char *)&entry.checksum, sizeof(entry.checksum));
+        vlogFile.read((char *)&entry.key, sizeof(entry.key));
+        vlogFile.read((char *)&entry.vlen, sizeof(entry.vlen));
+        entry.value.resize(entry.vlen);
+        vlogFile.read(&entry.value[0], entry.vlen);
+
+        std::vector<unsigned char> data;
+        for (size_t i = 0; i < sizeof(entry.key); ++i) {
+            data.push_back((entry.key >> (i * 8)) & 0xFF);
+        }
+        for (size_t i = 0; i < sizeof(entry.vlen); ++i) {
+            data.push_back((entry.vlen >> (i * 8)) & 0xFF);
+        }
+        for (char c : entry.value) {
+            data.push_back(c);
+        }
+
+        printf("Key: %lu\n", entry.key);
+        printf("Value: %s\n", entry.value.c_str());
+    }
 };

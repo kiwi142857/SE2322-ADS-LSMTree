@@ -72,8 +72,8 @@ private:
 		}
 
 		phase();
-
-		// Test deletions
+		
+		// Test deletions	
 		for (i = 0; i < max; i += 2)
 		{
 			EXPECT(true, store.del(i));
