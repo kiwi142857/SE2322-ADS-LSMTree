@@ -42,13 +42,23 @@ bool SSTable::checkBloomFilter(uint64_t num, int num_hashes) {
     return check_bloom_filter(num, bloomFilter, num_hashes);
 }
 
-// TODO：修改为二分查找
 std::tuple<uint64_t, uint64_t, uint32_t> SSTable::getOffset(uint64_t key) {
-    for (size_t i = 0; i < item.size(); i++) {
-        if (std::get<0>(item[i]) == key) {
-            return item[i];
+    int left = 0;
+    int right = item.size() - 1;
+
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        uint64_t midKey = std::get<0>(item[mid]);
+
+        if (midKey == key) {
+            return item[mid];
+        } else if (midKey < key) {
+            left = mid + 1;
+        } else {
+            right = mid - 1;
         }
     }
+
     return std::make_tuple(INT64_MAX, 0, 0);
 }
 

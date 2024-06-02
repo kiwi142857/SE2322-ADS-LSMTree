@@ -52,6 +52,10 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
         // since the max size of level 0 is 2, so if the size of level 0 is 2, then we need to merge the sstable
         if (sstables[0].size() > 2) {
             compactLevel0();
+            // check if the size of level 1 is more than 4
+            if (sstables[1].size() > 4) {
+                compact(1);
+            }
         } else {
             // output the sstable
             if (utils::dirExists("./data/sstable/sstable0") == 0) {
@@ -70,7 +74,6 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
     }
 }
 
-// TODO:check bloomFilter & max | min key to find the sstable
 std::string SSTableHandler::get(uint64_t key)
 {
     int sstablesSize = sstables.size();
@@ -89,8 +92,6 @@ std::string SSTableHandler::get(uint64_t key)
             } else {
                 continue;
             }
-
-
 
             // Get the offset of the key in the SSTable
             auto offset = sstables[i][j].getOffset(key);
@@ -144,6 +145,10 @@ void SSTableHandler::reset()
 
     // delete all the sstable
     sstables.clear();
+
+    // 相应删除sstable0文件
+    utils::rmfile("./data/sstable/sstable0/sstable1");
+    utils::rmfile("./data/sstable/sstable0/sstable2");
 }
 
 // TODO: avoid unnecessary read | multiThread | binary search
@@ -155,6 +160,7 @@ void SSTableHandler::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint
         // Iterate through the SSTable objects
         for (int j = sstables[i].size() - 1; j >= 0; j--) {
             // Get the list of key-value pairs from the SSTable
+            
             sstables[i][j].scanOffset(key1, key2, offsetList);
         }
     }
@@ -196,7 +202,7 @@ void SSTableHandler::compactLevel0()
 
     // 在Level1层中找到与此区间相交的SSTable，并将它们从原来的位置删除
     std::vector<SSTable> level1SSTables;
-    // 当Level1 存在时
+    // 当Level1不存在时
     if (sstables.size() == 1) {
         sstables.push_back({});
     }
@@ -314,4 +320,167 @@ void SSTableHandler::compactLevel0()
     });
 
     sstables[0].clear();
+}
+
+// compact
+void SSTableHandler::compact(int level){
+    // get the sstable from the level
+    // just to make sure the size of this level no more than 2^(level+1)
+    // 选择时间戳最小的若干个文件，如果时间戳相等选择键值最小的文件
+    // 由于上一层进行合并时，已经将本层排序，所以只需要选择前面的文件即可
+    std::vector<SSTable> sstablesToCompact;
+    int levelSize = sstables[level].size();
+    int legalSize = 1 << (level + 1);
+    int compactSize = levelSize - legalSize;
+    for (int i = 0; i < compactSize; i++) {
+        sstablesToCompact.push_back(sstables[level][i]);
+    }
+
+    // 统计本层所有SSTable覆盖的键的区间
+    uint64_t minKey = std::numeric_limits<uint64_t>::max();
+    uint64_t maxKey = 0;
+    int j, m = 0;
+    for (int i = 0; i < sstablesToCompact.size(); i++) {
+        j = sstablesToCompact[i].getSmallestKey();
+        if (j < minKey) {
+            minKey = j;
+        }
+        m = sstablesToCompact[i].getLargestKey();
+        if (j > maxKey) {
+            maxKey = m;
+        }
+    }
+
+    // 在下一层中找到与此区间相交的SSTable，并将它们从原来的位置删除
+    std::vector<SSTable> nextLevelSSTables;
+    // 当下一层不存在时
+    if (sstables.size() == level + 1) {
+        sstables.push_back({});
+    }
+
+    for (auto it = sstables[level + 1].begin(); it != sstables[level + 1].end();) {
+        if (it->getSmallestKey() <= maxKey && it->getLargestKey() >= minKey) {
+            nextLevelSSTables.push_back(*it);
+            it = sstables[level + 1].erase(it);
+        } else {
+            ++it;
+        }
+    }
+
+    // 将本层和下一层的SSTable的引用合并到一个vector中
+    std::vector<std::reference_wrapper<SSTable>> allSSTables;
+    for (auto &sstable : nextLevelSSTables) {
+        allSSTables.push_back(sstable);
+    }
+    for (auto &sstable : sstablesToCompact) {
+        allSSTables.push_back(sstable);
+    }
+
+    // 对所有的SSTable进行排序，时间戳相同时，键值较小的SSTable排在后面
+    std::sort(allSSTables.begin(), allSSTables.end(), [](const SSTable &a, const SSTable &b) {
+        if (a.getTimeId() == b.getTimeId()) {
+            return a.getSmallestKey() > b.getSmallestKey();
+        }
+        return a.getTimeId() < b.getTimeId();
+    });
+
+    // 合并SSTable
+    std::map<uint64_t, std::pair<uint64_t, uint32_t>> keyOffsetTable;
+    for (auto &sstableRef : allSSTables) {
+        SSTable &sstable = sstableRef.get(); // Access the underlying SSTable object
+        std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList = sstable.getItem();
+        for (auto &offset : offsetList) {
+            keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
+        }
+    }
+    // 获取最大时间戳
+    uint64_t maxTimeId = allSSTables.back().get().getTimeId();
+
+    // 生成新的SSTable,每个SSTable的大小不超过16KB,即item数不超过MEMTABLE_THRESHOLD，且每个SSTable的键值区间不重叠
+    std::vector<SSTable> newSSTables;
+    std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> newOffsetList;
+    uint64_t pairNum = 0;
+
+    for (auto &keyOffset : keyOffsetTable) {
+        newOffsetList.push_back(std::make_tuple(keyOffset.first, keyOffset.second.first, keyOffset.second.second));
+        pairNum++;
+        if (pairNum == MEMTABLE_THRESHOLD) {
+            uint64_t maxKey = std::get<0>(newOffsetList.back());
+            uint64_t minKey = std::get<0>(newOffsetList.front());
+            std::vector<bool> bloomFilter;
+            bloomFilter.resize(64 * kb);
+            gen_bloom_filter(newOffsetList, bloomFilter);
+            SSTable sstable(maxTimeId, pairNum, maxKey, minKey, bloomFilter, newOffsetList);
+            newSSTables.push_back(sstable);
+            newOffsetList.clear();
+            pairNum = 0;
+        }
+    }
+
+    // handle the last sstable
+    if (pairNum > 0) {
+        uint64_t maxKey = std::get<0>(newOffsetList.back());
+        uint64_t minKey = std::get<0>(newOffsetList.front());
+        std::vector<bool> bloomFilter;
+        bloomFilter.resize(64 * kb);
+        gen_bloom_filter(newOffsetList, bloomFilter);
+        SSTable sstable(maxTimeId, pairNum, maxKey, minKey, bloomFilter, newOffsetList);
+        newSSTables.push_back(sstable);
+    }
+
+    // output the sstable to next level
+    if (utils::dirExists("./data/sstable/sstable" + std::to_string(level + 1)) == 0) {
+        if (utils::mkdir("./data/sstable/sstable" + std::to_string(level + 1)) != 0) {
+            std::cerr << "Failed to create directory: " << "./data/sstable/sstable" + std::to_string(level + 1) << std::endl;
+            return;
+        }
+    }
+
+    // use utils::scanDir to get the largest sstable file number
+    std::vector<std::string> files;
+    utils::scanDir("./data/sstable/sstable" + std::to_string(level + 1), files);
+    int fileNum = 0;
+    for (auto &file : files) {
+        std::string::size_type pos = file.find("sstable");
+        if (pos != std::string::npos) {
+            int num = std::stoi(file.substr(pos + 7));
+            if (num > fileNum) {
+                fileNum = num;
+            }
+        }
+    }
+
+    for (auto &sstable : newSSTables) {
+        fileNum++;
+        std::stringstream ss;
+        ss << "./data/sstable/sstable" << level + 1 << "/sstable" << fileNum;
+        std::string filename = ss.str();
+        std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
+        sstable.output(sstableFile);
+        sstableFile.close();
+    }
+
+    // 将新生成的SSTable加入下一层
+    for (auto &sstable : newSSTables) {
+        sstables[level + 1].push_back(sstable);
+    }
+
+    // 将下一层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较小的排在后面
+    std::sort(sstables[level + 1].begin(), sstables[level + 1].end(), [](const SSTable &a, const SSTable &b) {
+        if (a.getTimeId() == b.getTimeId()) {
+            return a.getSmallestKey() > b.getSmallestKey();
+        }
+        return a.getTimeId() < b.getTimeId();
+    });
+
+    // 将本层的,compactSize个SSTable删除
+    for (int i = 0; i < compactSize; i++) {
+        sstables[level].erase(sstables[level].begin());
+    }
+
+    // 判断是否需要递归合并下一层
+    if (sstables[level + 1].size() > (1 << (level + 2))) {
+        compact(level + 1);
+    }
+
 }
