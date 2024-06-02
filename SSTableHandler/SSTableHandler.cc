@@ -80,6 +80,18 @@ std::string SSTableHandler::get(uint64_t key)
         // Iterate through the SSTable objects
         int sstableSize = sstables[i].size() - 1;
         for (int j = sstableSize; j >= 0; j--) {
+            // check if the key is between the max and min key of the sstable
+            if (key >= sstables[i][j].getSmallestKey() && key <= sstables[i][j].getLargestKey()) {
+                // check the bloom filter
+                if (!sstables[i][j].checkBloomFilter(key)) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
+
+
             // Get the offset of the key in the SSTable
             auto offset = sstables[i][j].getOffset(key);
             if (std::get<0>(offset) == key) {
