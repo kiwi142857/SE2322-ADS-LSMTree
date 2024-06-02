@@ -7,11 +7,12 @@
 SSTable::SSTable(uint64_t timeId, uint64_t pairNum, uint64_t largestKey, uint64_t smallestKey, std::vector<bool> bloomFilter, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> item)
 : timeId(timeId), pairNum(pairNum), largestKey(largestKey), smallestKey(smallestKey), bloomFilter(bloomFilter), item(item) {
     level = 0;
+    filename = "";
 }
 
 SSTable::SSTable() {
     level = 0;
-    
+    filename = "";
 }
 
 uint64_t SSTable::getTimeId() const {
