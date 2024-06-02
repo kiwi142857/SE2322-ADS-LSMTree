@@ -84,6 +84,10 @@ std::string SSTableHandler::get(uint64_t key)
             auto offset = sstables[i][j].getOffset(key);
             if (std::get<0>(offset) == key) {
 
+                if(std::get<2>(offset) == 0) {
+                    return "";
+                }
+
                 // Seek to the offset in the vlog file
                 vlogFile.seekg(std::get<1>(offset) + 15);
 
@@ -91,9 +95,6 @@ std::string SSTableHandler::get(uint64_t key)
                 std::string value(std::get<2>(offset), ' ');
                 vlogFile.read(&value[0], std::get<2>(offset));
 
-                // Return the value
-                if (value == "~DELETED~")
-                    return "";
                 return value;
             }
         }

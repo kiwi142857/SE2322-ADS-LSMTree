@@ -23,6 +23,11 @@ void vLog::append(std::list<std::pair<vLogEntry, uint64_t>> &entries, std::fstre
     std::streampos filePos = file.tellp();
     
     for (auto &entry : entries) {
+        if(entry.first.value == "~DELETED~")
+        {
+            entry.first.vlen = 0;
+            continue;
+        }
         entry.second = ss.tellp() + filePos; 
         ss.write(&vLogEntry::magic, 1);
         ss.write((char *)&entry.first.checksum, sizeof(entry.first.checksum));
