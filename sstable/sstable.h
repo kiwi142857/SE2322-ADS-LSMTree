@@ -19,7 +19,6 @@ class SSTable {
 
     uint32_t level;
 
-    std::string filename;
     public:
         SSTable(uint64_t timeId, uint64_t pairNum, uint64_t largestKey, uint64_t smallestKey, std::vector<bool> bloomFilter, std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable);
         SSTable();
@@ -42,12 +41,4 @@ class SSTable {
         void output(std::fstream &file);
 
         void scanOffset(uint64_t start, uint64_t end, std::list<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList);
-
-        void setFilename(std::string filename){
-            this->filename = filename;
-        }
-
-        std::string getFilename(){
-            return filename;
-        }
 };
