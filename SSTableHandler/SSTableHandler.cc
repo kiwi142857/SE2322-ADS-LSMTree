@@ -54,14 +54,14 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
             compactLevel0();
         } else {
             // output the sstable
-            if (utils::dirExists("./data/sstable0") == 0) {
-                if (utils::mkdir("./data/sstable0") != 0) {
-                    std::cerr << "Failed to create directory: " << "./data/sstable0" << std::endl;
+            if (utils::dirExists("./data/sstable/sstable0") == 0) {
+                if (utils::mkdir("./data/sstable/sstable0") != 0) {
+                    std::cerr << "Failed to create directory: " << "./data/sstable/sstable0" << std::endl;
                     return;
                 }
             }
             std::stringstream ss;
-            ss << "./data/sstable0/sstable" << sstables[0].size();
+            ss << "./data/sstable/sstable0/sstable" << sstables[0].size();
             std::string filename = ss.str();
             std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
             sstable.output(sstableFile);
@@ -112,7 +112,7 @@ void SSTableHandler::reset()
     utils::rmfile("./data/vlog");
 
     // Remove the sstable directory
-    utils::rmdir("./data/sstable");
+    utils::rmrf("./data/sstable");
 
     // Open the vlog file
     vlogFile.open("./data/vlog", std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
@@ -246,16 +246,16 @@ void SSTableHandler::compactLevel0()
     }
 
     // output the sstable to level 1
-    if (utils::dirExists("./data/sstable1") == 0) {
-        if (utils::mkdir("./data/sstable1") != 0) {
-            std::cerr << "Failed to create directory: " << "./data/sstable1" << std::endl;
+    if (utils::dirExists("./data/sstable/sstable1") == 0) {
+        if (utils::mkdir("./data/sstable/sstable1") != 0) {
+            std::cerr << "Failed to create directory: " << "./data/sstable/sstable1" << std::endl;
             return;
         }
     }
     
     // use utils::scanDir to get the largest sstable file number
     std::vector<std::string> files;
-    utils::scanDir("./data/sstable1", files);
+    utils::scanDir("./data/sstable/sstable1", files);
     int fileNum = 0;
     for (auto &file : files) {
         std::string::size_type pos = file.find("sstable");
@@ -269,7 +269,7 @@ void SSTableHandler::compactLevel0()
     for (auto &sstable : newSSTables) {
         fileNum++;
         std::stringstream ss;
-        ss << "./data/sstable1/sstable" << fileNum;
+        ss << "./data/sstable/sstable1/sstable" << fileNum;
         std::string filename = ss.str();
         std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
         sstable.output(sstableFile);

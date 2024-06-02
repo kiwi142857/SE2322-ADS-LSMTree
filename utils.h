@@ -9,6 +9,7 @@
 #include <fcntl.h>
 #include <cstring>
 #include <memory>
+#include <filesystem>
 
 #define PAGE_SIZE (4 * 1024)
 
@@ -93,6 +94,17 @@ namespace utils
         return ::rmdir(path.c_str());
     }
 
+    /**
+     * Delete a directory recursively
+     * @param path directory to be deleted.
+     * @return 0 if delete successfully, -1 otherwise.
+     */
+    static inline int rmrf(const std::string &path)
+    {
+        std::filesystem::remove_all(path);
+        return 0;
+    }
+    
     /**
      * Delete a file
      * @param path file to be deleted.
