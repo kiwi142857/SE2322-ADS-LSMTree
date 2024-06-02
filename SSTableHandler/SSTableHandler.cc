@@ -160,7 +160,11 @@ void SSTableHandler::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint
         // Iterate through the SSTable objects
         for (int j = sstables[i].size() - 1; j >= 0; j--) {
             // Get the list of key-value pairs from the SSTable
-            
+
+            // 利用最大键值和最小键值进行判断，如果key2小于最小键值或者key1大于最大键值，则不可能存在交集
+            if (key2 < sstables[i][j].getSmallestKey() || key1 > sstables[i][j].getLargestKey()) {
+                continue;
+            }
             sstables[i][j].scanOffset(key1, key2, offsetList);
         }
     }
