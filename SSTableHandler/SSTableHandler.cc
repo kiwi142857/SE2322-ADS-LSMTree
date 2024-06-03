@@ -231,7 +231,7 @@ void SSTableHandler::compactLevel0()
             minKey = j;
         }
         m = sstables[0][i].getLargestKey();
-        if (j > maxKey) {
+        if (m > maxKey) {
             maxKey = m;
         }
     }
@@ -278,6 +278,14 @@ void SSTableHandler::compactLevel0()
         SSTable &sstable = sstableRef.get(); // Access the underlying SSTable object
         std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList = sstable.getItem();
         for (auto &offset : offsetList) {
+            uint64_t key = std::get<0>(offset);
+            // for debug
+            if(key == 4896) {
+                // if the key is 4896 & keyOffsetTable[4896] exists, print the keyOffsetTable[4896]
+                if(keyOffsetTable.find(4896) != keyOffsetTable.end()) {
+                    std::cout << "key: " << key << " offset: " << keyOffsetTable[4896].first << " vlen: " << keyOffsetTable[4896].second << std::endl;
+                }
+            }
             keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
         }
     }
@@ -388,6 +396,8 @@ void SSTableHandler::compact(int level)
 
     std::vector<std::string> filesToDelete;
 
+    
+
     for (int i = 0; i < compactSize; i++) {
         filesToDelete.push_back(sstables[level][i].getFilename());
         sstablesToCompact.push_back(sstables[level][i]);
@@ -403,7 +413,7 @@ void SSTableHandler::compact(int level)
             minKey = j;
         }
         m = sstablesToCompact[i].getLargestKey();
-        if (j > maxKey) {
+        if (m > maxKey) {
             maxKey = m;
         }
     }
@@ -448,6 +458,20 @@ void SSTableHandler::compact(int level)
         SSTable &sstable = sstableRef.get(); // Access the underlying SSTable object
         std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList = sstable.getItem();
         for (auto &offset : offsetList) {
+            uint64_t key = std::get<0>(offset);
+            // for debug
+            if(key == 4896) {
+                // if the key is 4896 & keyOffsetTable[4896] exists, print the keyOffsetTable[4896]
+                if(keyOffsetTable.find(key) != keyOffsetTable.end()) {
+                    std::cout << "key: " << key << " offset: " << keyOffsetTable[4896].first << " vlen: " << keyOffsetTable[4896].second << std::endl;
+                    // print the new key offset vlen
+                    std::cout << "key: " << std::get<0>(offset) << " offset: " << std::get<1>(offset) << " vlen: " << std::get<2>(offset) << std::endl;
+                    // if the original offset is bigger , continue
+                    
+                    std::cout<<"origin:"<<vLog::get(keyOffsetTable[key].first, vlogFile);
+                    std::cout<<"changed:"<<vLog::get(std::get<1>(offset), vlogFile);    
+                }
+            }
             keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
         }
     }
@@ -533,11 +557,6 @@ void SSTableHandler::compact(int level)
         return a.getTimeId() < b.getTimeId();
     });
 
-    // 判断是否需要递归合并下一层
-    if (sstables[level + 1].size() > (1 << (level + 2))) {
-        compact(level + 1);
-    }
-
     for (int i = 0; i < compactSize; i++) {
         sstables[level].erase(sstables[level].begin());
     }
@@ -548,4 +567,12 @@ void SSTableHandler::compact(int level)
             std::cerr << "Failed to delete file: " << file << std::endl;
         }
     }
+
+
+    // 判断是否需要递归合并下一层
+    if (sstables[level + 1].size() > (1 << (level + 2))) {
+        compact(level + 1);
+    }
+
+    
 }
