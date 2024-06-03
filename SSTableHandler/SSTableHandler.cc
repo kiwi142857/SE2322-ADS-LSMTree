@@ -68,8 +68,8 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
             ss << "./data/sstable/sstable0/sstable" << sstables[0].size();
             std::string filename = ss.str();
             std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
+            sstable.setFilename(filename);
             sstable.output(sstableFile);
-            sstable.setFileName(filename);
             sstableFile.close();
         }
     }
@@ -206,16 +206,17 @@ void SSTableHandler::compactLevel0()
     }
 
     // 在Level1层中找到与此区间相交的SSTable，并将它们从原来的位置删除
-    std::vector<std::string> filesToDelete;  // 用于存储需要删除的文件名
-
     std::vector<SSTable> level1SSTables;
+    // 用于存储需要删除的文件名
+    std::vector<std::string> filesToDelete;
+
     // 当Level1不存在时
     if (sstables.size() == 1) {
         sstables.push_back({});
     }
     for (auto it = sstables[1].begin(); it != sstables[1].end();) {
         if (it->getSmallestKey() <= maxKey && it->getLargestKey() >= minKey) {
-            filesToDelete.push_back(it->getFileName());
+            filesToDelete.push_back(it->getFilename());
             level1SSTables.push_back(*it);
             it = sstables[1].erase(it);
         } else {
@@ -310,8 +311,8 @@ void SSTableHandler::compactLevel0()
         ss << "./data/sstable/sstable1/sstable" << fileNum;
         std::string filename = ss.str();
         std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
+        sstable.setFilename(filename);
         sstable.output(sstableFile);
-        sstable.setFileName(filename);
         sstableFile.close();
     }
 
@@ -330,21 +331,20 @@ void SSTableHandler::compactLevel0()
 
     sstables[0].clear();
 
-    // 删除硬盘上对应的文件
-    for (const auto &filename : filesToDelete) {
-        if (remove(filename.c_str()) != 0) {
-            std::cerr << "Error deleting file: " << filename << std::endl;
+    // 删除Level1层的文件
+    for (auto &file : filesToDelete) {
+        if(utils::rmfile(file) != 0){
+            std::cerr << "Failed to delete file: " << file << std::endl;
         }
     }
 
-    // 删除Level0层的SSTable文件
+    // 删除Level0层的文件
     utils::rmfile("./data/sstable/sstable0/sstable1");
     utils::rmfile("./data/sstable/sstable0/sstable2");
 }
 
 // compact
-void SSTableHandler::compact(int level)
-{
+void SSTableHandler::compact(int level){
     // get the sstable from the level
     // just to make sure the size of this level no more than 2^(level+1)
     // 选择时间戳最小的若干个文件，如果时间戳相等选择键值最小的文件
@@ -355,8 +355,9 @@ void SSTableHandler::compact(int level)
     int compactSize = levelSize - legalSize;
 
     std::vector<std::string> filesToDelete;
+
     for (int i = 0; i < compactSize; i++) {
-        filesToDelete.push_back(sstables[level][i].getFileName());
+        filesToDelete.push_back(sstables[level][i].getFilename());
         sstablesToCompact.push_back(sstables[level][i]);
         sstables[level].erase(sstables[level].begin());
     }
@@ -385,7 +386,7 @@ void SSTableHandler::compact(int level)
 
     for (auto it = sstables[level + 1].begin(); it != sstables[level + 1].end();) {
         if (it->getSmallestKey() <= maxKey && it->getLargestKey() >= minKey) {
-            filesToDelete.push_back(it->getFileName());
+            filesToDelete.push_back(it->getFilename());
             nextLevelSSTables.push_back(*it);
             it = sstables[level + 1].erase(it);
         } else {
@@ -457,8 +458,7 @@ void SSTableHandler::compact(int level)
     // output the sstable to next level
     if (utils::dirExists("./data/sstable/sstable" + std::to_string(level + 1)) == 0) {
         if (utils::mkdir("./data/sstable/sstable" + std::to_string(level + 1)) != 0) {
-            std::cerr << "Failed to create directory: " << "./data/sstable/sstable" + std::to_string(level + 1)
-                      << std::endl;
+            std::cerr << "Failed to create directory: " << "./data/sstable/sstable" + std::to_string(level + 1) << std::endl;
             return;
         }
     }
@@ -483,8 +483,8 @@ void SSTableHandler::compact(int level)
         ss << "./data/sstable/sstable" << level + 1 << "/sstable" << fileNum;
         std::string filename = ss.str();
         std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
+        sstable.setFilename(filename);
         sstable.output(sstableFile);
-        sstable.setFileName(filename);
         sstableFile.close();
     }
 
@@ -501,20 +501,20 @@ void SSTableHandler::compact(int level)
         return a.getTimeId() < b.getTimeId();
     });
 
-    // 将本层的,compactSize个SSTable删除
-    for (int i = 0; i < compactSize; i++) {
-        sstables[level].erase(sstables[level].begin());
-    }
-
-    // 删除硬盘上对应的文件
-    for (const auto &filename : filesToDelete) {
-        if (remove(filename.c_str()) != 0) {
-            std::cerr << "Error deleting file: " << filename << std::endl;
-        }
-    }
+    
 
     // 判断是否需要递归合并下一层
     if (sstables[level + 1].size() > (1 << (level + 2))) {
         compact(level + 1);
     }
+
+    // 删除需要删除的文件
+    for (auto &file : filesToDelete) {
+        if(utils::rmfile(file) != 0){
+            std::cerr << "Failed to delete file: " << file << std::endl;
+        }
+    }
+
+
+
 }
