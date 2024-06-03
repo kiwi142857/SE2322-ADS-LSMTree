@@ -1,5 +1,5 @@
 LINK.o = $(LINK.cc)
-CXXFLAGS = -std=c++17 -Wall
+CXXFLAGS = -std=c++17 -Wall   -g 
 CXX = g++
 
 all: correctness persistence
@@ -11,31 +11,31 @@ persistence: kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloo
 	$(LINK.o) -o persistence kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
 
 kvstore.o: kvstore.cc
-	$(CXX) $(CXXFLAGS) -g -c kvstore.cc
+	$(CXX) $(CXXFLAGS)  -c kvstore.cc
 
 correctness.o: correctness.cc
-	$(CXX) $(CXXFLAGS) -g -c correctness.cc
+	$(CXX) $(CXXFLAGS)  -c correctness.cc
 
 persistence.o: persistence.cc
-	$(CXX) $(CXXFLAGS) -g -c persistence.cc
+	$(CXX) $(CXXFLAGS)  -c persistence.cc
 
 memTable.o: ./MemTable/memTable.cc
-	$(CXX) $(CXXFLAGS) -g -c ./MemTable/memTable.cc
+	$(CXX) $(CXXFLAGS)  -c ./MemTable/memTable.cc
 
 skiplist.o: ./MemTable/skiplist.cc
-	$(CXX) $(CXXFLAGS) -g -c ./MemTable/skiplist.cc
+	$(CXX) $(CXXFLAGS)  -c ./MemTable/skiplist.cc
 
 vLog.o: ./vLog/vLog.cc
-	$(CXX) $(CXXFLAGS) -g -c ./vLog/vLog.cc
+	$(CXX) $(CXXFLAGS)  -c ./vLog/vLog.cc
 
 sstable.o: ./sstable/sstable.cc
-	$(CXX) $(CXXFLAGS) -g -c ./sstable/sstable.cc
+	$(CXX) $(CXXFLAGS)  -c ./sstable/sstable.cc
 
 bloomFilter.o: ./bloomFilter/bloomFilter.cc
-	$(CXX) $(CXXFLAGS) -g -c ./bloomFilter/bloomFilter.cc
+	$(CXX) $(CXXFLAGS)  -c ./bloomFilter/bloomFilter.cc
 
 SSTableHandler.o: ./SSTableHandler/SSTableHandler.cc
-	$(CXX) $(CXXFLAGS) -g -c ./SSTableHandler/SSTableHandler.cc
+	$(CXX) $(CXXFLAGS)  -c ./SSTableHandler/SSTableHandler.cc
 
 clean:
 	-rm -f correctness persistence *.o

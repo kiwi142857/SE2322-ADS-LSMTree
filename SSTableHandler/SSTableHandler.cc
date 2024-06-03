@@ -130,6 +130,37 @@ std::string SSTableHandler::get(uint64_t key)
     return "";
 }
 
+uint64_t SSTableHandler::getOffset(uint64_t key)
+{
+    int sstablesSize = sstables.size();
+
+    // Iterate through the SSTables
+    for (int i = 0; i < sstablesSize; i++) {
+        // Iterate through the SSTable objects
+        int sstableSize = sstables[i].size() - 1;
+        for (int j = sstableSize; j >= 0; j--) {
+            // check if the key is between the max and min key of the sstable
+            if (key >= sstables[i][j].getSmallestKey() && key <= sstables[i][j].getLargestKey()) {
+                // check the bloom filter
+                if (!sstables[i][j].checkBloomFilter(key)) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
+            // Get the offset of the key in the SSTable
+            auto offset = sstables[i][j].getOffset(key);
+            if (std::get<0>(offset) == key) {
+                return std::get<1>(offset);
+            }
+        }
+    }
+
+    // Return an empty string if the key is not found
+    return std::numeric_limits<uint64_t>::max();
+}
+
 void SSTableHandler::reset()
 {
     // Close the vlog file

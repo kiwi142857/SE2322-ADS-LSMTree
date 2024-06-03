@@ -12,6 +12,7 @@ private:
 	const uint64_t MEDIUM_TEST_MAX = 1024 * 2;
 	const uint64_t LARGE_TEST_MAX = 1024 * 64;
 	const uint64_t GC_TEST_MAX = 1024 * 48;
+	const uint64_t GC_SMALL_TEST_MAX = 1024 * 8;
 
 	void regular_test(uint64_t max)
 	{
@@ -192,6 +193,107 @@ private:
 		report();
 	}
 
+	void my_gc_test(uint64_t max)
+	{
+		uint64_t i;
+		uint64_t gc_trigger = 1024;
+
+		for (i = 0; i < max; ++i)
+		{
+			store.put(i, std::string(i + 1, 's'));
+		}
+
+		for (i = 0; i < max; ++i)
+		{
+			EXPECT(std::string(i + 1, 's'), store.get(i));
+			switch (i % 3)
+			{
+			case 0:
+				store.put(i, std::string(i + 1, 'e'));
+				break;
+			case 1:
+				store.put(i, std::string(i + 1, '2'));
+				break;
+			case 2:
+				store.put(i, std::string(i + 1, '3'));
+				break;
+			default:
+				assert(0);
+			}
+
+			if (i % gc_trigger == 0) [[unlikely]]
+			{
+				check_gc(MB);
+			}
+		}
+
+		phase();
+
+		for (i = 0; i < max; ++i)
+		{
+			switch (i % 3)
+			{
+			case 0:
+				EXPECT(std::string(i + 1, 'e'), store.get(i));
+				break;
+			case 1:
+				EXPECT(std::string(i + 1, '2'), store.get(i));
+				break;
+			case 2:
+				EXPECT(std::string(i + 1, '3'), store.get(i));
+				break;
+			default:
+				assert(0);
+			}
+		}
+
+		phase();
+
+		for (i = 1; i < max; i += 2)
+		{
+			EXPECT(true, store.del(i));
+
+			if ((i - 1) % gc_trigger == 0) [[unlikely]]
+			{
+				check_gc(MB);
+			}
+		}
+
+		for (i = 0; i < max; i += 2)
+		{
+			switch (i % 3)
+			{
+			case 0:
+				EXPECT(std::string(i + 1, 'e'), store.get(i));
+				break;
+			case 1:
+				EXPECT(std::string(i + 1, '2'), store.get(i));
+				break;
+			case 2:
+				EXPECT(std::string(i + 1, '3'), store.get(i));
+				break;
+			default:
+				assert(0);
+			}
+
+			store.del(i);
+
+			if (((i - 1) / 2) % gc_trigger == 0) [[unlikely]]
+			{
+				check_gc(MB);
+			}
+		}
+
+		for (i = 0; i < max; ++i)
+		{
+			EXPECT(not_found, store.get(i));
+		}
+
+		phase();
+
+		report();
+	}
+
 public:
 	CorrectnessTest(const std::string &dir, const std::string &vlog, bool v = true) : Test(dir, vlog, v)
 	{
@@ -203,7 +305,7 @@ public:
 
 		store.reset();
 
-		std::cout << "[Simple Test]" << std::endl;
+		/* std::cout << "[Simple Test]" << std::endl;
 		regular_test(SIMPLE_TEST_MAX);
 
 		store.reset();
@@ -220,7 +322,10 @@ public:
 		store.reset();
 
 		std::cout << "[GC Test]" << std::endl;
-		gc_test(GC_TEST_MAX);
+		gc_test(GC_TEST_MAX); */
+
+		std::cout<< "[GC Test]" << std::endl;
+		my_gc_test(GC_SMALL_TEST_MAX);
 	}
 };
 

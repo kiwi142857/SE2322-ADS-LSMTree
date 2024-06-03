@@ -5,7 +5,6 @@
 #include "utils.h"
 #include <string>
 
-
 KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
 {
 }
@@ -36,8 +35,7 @@ std::string KVStore::get(uint64_t key)
     std::string value = memtable.get(key);
     if (value != "" && value != "~DELETED~")
         return value;
-    if(value == "~DELETED~")
-    {
+    if (value == "~DELETED~") {
         return "";
     }
 
@@ -49,8 +47,7 @@ std::string KVStore::get(uint64_t key)
  */
 bool KVStore::del(uint64_t key)
 {
-    if(get(key) == "")
-    {
+    if (get(key) == "") {
         return false;
     }
     put(key, "~DELETED~");
@@ -85,4 +82,58 @@ void KVStore::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, s
  */
 void KVStore::gc(uint64_t chunk_size)
 {
+    // gc
+
+    // since there maybe some gc operation done before, so we need to get the first valid data block in vlogFile
+    // use utils::seek_data_block to get the offset of the first data block
+    off_t offset = utils::seek_data_block("./data/vlog");
+    off_t start_offset = offset;
+    std::fstream &vlogFile = sstables.vlogFile;
+    // search vLog entry sign 'v', if not found, output an error message
+    if (offset == -1) {
+        std::cerr << "No valid data block found in vlogFile" << std::endl;
+        return;
+    }
+    char buffer;
+    vlogFile.seekg(offset);
+
+    while (vlogFile.read(&buffer, 1)) {
+        if (buffer == vLogEntry::magic) {
+            // use vLog::isValidEntry to check if the entry is valid
+            if (vLog::isValidEntry(offset, vlogFile)) {
+                break;
+            }
+        }
+        offset++;
+    }
+
+    // if the entry is valid, check if if the entry still count
+    // if the entry is still count, put(entry.key, entry.value) in memtable
+    // else continue
+    int scan_size = 0;
+    while (scan_size < chunk_size) {
+
+        vLogEntry entry = vLog::getEntry(offset, vlogFile);
+        if (memtable.get(entry.key) != "") {
+            offset += entry.vlen + 15;
+            scan_size += entry.vlen + 15;
+            continue;
+        }
+        if (sstables.getOffset(entry.key) != offset) {
+            offset += entry.vlen + 15;
+            scan_size += entry.vlen + 15;
+            continue;
+        }
+        this->put(entry.key, entry.value);
+        offset += entry.vlen + 15;
+        scan_size += entry.vlen + 15;
+    }
+
+    // 将剩余的Memtable数据转换为SSTable
+    sstables.convertMemTableToSSTable(memtable);
+    memtable.clean();
+    memtable.setSize(0);
+
+    // 使用utils::de_alloc_file()释放vlogFile的空间
+    utils::de_alloc_file("./data/vlog", start_offset, offset - start_offset);
 }
