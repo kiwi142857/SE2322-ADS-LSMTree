@@ -321,10 +321,10 @@ void SSTableHandler::compactLevel0()
         sstables[1].push_back(sstable);
     }
 
-    // 将Level1层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较小的排在后面
+    // 将Level1层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较大的排在后面
     std::sort(sstables[1].begin(), sstables[1].end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
-            return a.getSmallestKey() > b.getSmallestKey();
+            return a.getSmallestKey() < b.getSmallestKey();
         }
         return a.getTimeId() < b.getTimeId();
     });
@@ -403,10 +403,10 @@ void SSTableHandler::compact(int level)
         allSSTables.push_back(sstable);
     }
 
-    // 对所有的SSTable进行排序，时间戳相同时，键值较小的SSTable排在后面
+    // 对所有的SSTable进行排序，时间戳相同时，键值较大的SSTable排在后面
     std::sort(allSSTables.begin(), allSSTables.end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
-            return a.getSmallestKey() > b.getSmallestKey();
+            return a.getSmallestKey() < b.getSmallestKey();
         }
         return a.getTimeId() < b.getTimeId();
     });
@@ -494,10 +494,10 @@ void SSTableHandler::compact(int level)
         sstables[level + 1].push_back(sstable);
     }
 
-    // 将下一层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较小的排在后面
+    // 将下一层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较大的排在后面
     std::sort(sstables[level + 1].begin(), sstables[level + 1].end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
-            return a.getSmallestKey() > b.getSmallestKey();
+            return a.getSmallestKey() < b.getSmallestKey();
         }
         return a.getTimeId() < b.getTimeId();
     });
