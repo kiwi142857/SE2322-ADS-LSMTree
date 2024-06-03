@@ -267,7 +267,7 @@ void SSTableHandler::compactLevel0()
     // 对所有的SSTable进行排序，时间戳相同时，键值较小的SSTable排在后面
     std::sort(allSSTables.begin(), allSSTables.end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
-            return a.getSmallestKey() > b.getSmallestKey();
+            return a.getSmallestKey() < b.getSmallestKey();
         }
         return a.getTimeId() < b.getTimeId();
     });
@@ -278,14 +278,7 @@ void SSTableHandler::compactLevel0()
         SSTable &sstable = sstableRef.get(); // Access the underlying SSTable object
         std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList = sstable.getItem();
         for (auto &offset : offsetList) {
-            uint64_t key = std::get<0>(offset);
-            // for debug
-            if(key == 4896) {
-                // if the key is 4896 & keyOffsetTable[4896] exists, print the keyOffsetTable[4896]
-                if(keyOffsetTable.find(4896) != keyOffsetTable.end()) {
-                    std::cout << "key: " << key << " offset: " << keyOffsetTable[4896].first << " vlen: " << keyOffsetTable[4896].second << std::endl;
-                }
-            }
+            
             keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
         }
     }
@@ -360,10 +353,10 @@ void SSTableHandler::compactLevel0()
         sstables[1].push_back(sstable);
     }
 
-    // 将Level1层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较小的排在后面
+    // 将Level1层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较大的排在后面
     std::sort(sstables[1].begin(), sstables[1].end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
-            return a.getSmallestKey() > b.getSmallestKey();
+            return a.getSmallestKey() < b.getSmallestKey();
         }
         return a.getTimeId() < b.getTimeId();
     });
@@ -435,6 +428,22 @@ void SSTableHandler::compact(int level)
         }
     }
 
+    // 对nextLevelSSTables进行排序
+    std::sort(nextLevelSSTables.begin(), nextLevelSSTables.end(), [](const SSTable &a, const SSTable &b) {
+        if (a.getTimeId() == b.getTimeId()) {
+            return a.getSmallestKey() < b.getSmallestKey();
+        }
+        return a.getTimeId() < b.getTimeId();
+    });
+
+    // 对sstablesToCompact进行排序
+    std::sort(sstablesToCompact.begin(), sstablesToCompact.end(), [](const SSTable &a, const SSTable &b) {
+        if (a.getTimeId() == b.getTimeId()) {
+            return a.getSmallestKey() < b.getSmallestKey();
+        }
+        return a.getTimeId() < b.getTimeId();
+    });
+
     // 将本层和下一层的SSTable的引用合并到一个vector中
     std::vector<std::reference_wrapper<SSTable>> allSSTables;
     for (auto &sstable : nextLevelSSTables) {
@@ -443,14 +452,9 @@ void SSTableHandler::compact(int level)
     for (auto &sstable : sstablesToCompact) {
         allSSTables.push_back(sstable);
     }
-
-    // 对所有的SSTable进行排序，时间戳相同时，键值较小的SSTable排在后面
-    std::sort(allSSTables.begin(), allSSTables.end(), [](const SSTable &a, const SSTable &b) {
-        if (a.getTimeId() == b.getTimeId()) {
-            return a.getSmallestKey() > b.getSmallestKey();
-        }
-        return a.getTimeId() < b.getTimeId();
-    });
+    
+    // 获取最大时间戳
+    uint64_t maxTimeId = allSSTables.back().get().getTimeId();
 
     // 合并SSTable
     std::map<uint64_t, std::pair<uint64_t, uint32_t>> keyOffsetTable;
@@ -458,25 +462,10 @@ void SSTableHandler::compact(int level)
         SSTable &sstable = sstableRef.get(); // Access the underlying SSTable object
         std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList = sstable.getItem();
         for (auto &offset : offsetList) {
-            uint64_t key = std::get<0>(offset);
-            // for debug
-            if(key == 4896) {
-                // if the key is 4896 & keyOffsetTable[4896] exists, print the keyOffsetTable[4896]
-                if(keyOffsetTable.find(key) != keyOffsetTable.end()) {
-                    std::cout << "key: " << key << " offset: " << keyOffsetTable[4896].first << " vlen: " << keyOffsetTable[4896].second << std::endl;
-                    // print the new key offset vlen
-                    std::cout << "key: " << std::get<0>(offset) << " offset: " << std::get<1>(offset) << " vlen: " << std::get<2>(offset) << std::endl;
-                    // if the original offset is bigger , continue
-                    
-                    std::cout<<"origin:"<<vLog::get(keyOffsetTable[key].first, vlogFile);
-                    std::cout<<"changed:"<<vLog::get(std::get<1>(offset), vlogFile);    
-                }
-            }
+            
             keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
         }
     }
-    // 获取最大时间戳
-    uint64_t maxTimeId = allSSTables.back().get().getTimeId();
 
     // 生成新的SSTable,每个SSTable的大小不超过16KB,即item数不超过MEMTABLE_THRESHOLD，且每个SSTable的键值区间不重叠
     std::vector<SSTable> newSSTables;
@@ -549,10 +538,10 @@ void SSTableHandler::compact(int level)
         sstables[level + 1].push_back(sstable);
     }
 
-    // 将下一层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较小的排在后面
+    // 将下一层的SSTable排序，时间戳较大的排在后面，时间戳相同时，键值较大的排在后面
     std::sort(sstables[level + 1].begin(), sstables[level + 1].end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
-            return a.getSmallestKey() > b.getSmallestKey();
+            return a.getSmallestKey() < b.getSmallestKey();
         }
         return a.getTimeId() < b.getTimeId();
     });
