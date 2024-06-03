@@ -333,7 +333,7 @@ void SSTableHandler::compactLevel0()
 
     // 删除Level1层的文件
     for (auto &file : filesToDelete) {
-        if(utils::rmfile(file) != 0){
+        if (utils::rmfile(file) != 0) {
             std::cerr << "Failed to delete file: " << file << std::endl;
         }
     }
@@ -344,7 +344,8 @@ void SSTableHandler::compactLevel0()
 }
 
 // compact
-void SSTableHandler::compact(int level){
+void SSTableHandler::compact(int level)
+{
     // get the sstable from the level
     // just to make sure the size of this level no more than 2^(level+1)
     // 选择时间戳最小的若干个文件，如果时间戳相等选择键值最小的文件
@@ -359,7 +360,6 @@ void SSTableHandler::compact(int level){
     for (int i = 0; i < compactSize; i++) {
         filesToDelete.push_back(sstables[level][i].getFilename());
         sstablesToCompact.push_back(sstables[level][i]);
-        sstables[level].erase(sstables[level].begin());
     }
 
     // 统计本层所有SSTable覆盖的键的区间
@@ -458,7 +458,8 @@ void SSTableHandler::compact(int level){
     // output the sstable to next level
     if (utils::dirExists("./data/sstable/sstable" + std::to_string(level + 1)) == 0) {
         if (utils::mkdir("./data/sstable/sstable" + std::to_string(level + 1)) != 0) {
-            std::cerr << "Failed to create directory: " << "./data/sstable/sstable" + std::to_string(level + 1) << std::endl;
+            std::cerr << "Failed to create directory: " << "./data/sstable/sstable" + std::to_string(level + 1)
+                      << std::endl;
             return;
         }
     }
@@ -501,20 +502,19 @@ void SSTableHandler::compact(int level){
         return a.getTimeId() < b.getTimeId();
     });
 
-    
-
     // 判断是否需要递归合并下一层
     if (sstables[level + 1].size() > (1 << (level + 2))) {
         compact(level + 1);
     }
 
+    for (int i = 0; i < compactSize; i++) {
+        sstables[level].erase(sstables[level].begin());
+    }
+    
     // 删除需要删除的文件
     for (auto &file : filesToDelete) {
-        if(utils::rmfile(file) != 0){
+        if (utils::rmfile(file) != 0) {
             std::cerr << "Failed to delete file: " << file << std::endl;
         }
     }
-
-
-
 }
