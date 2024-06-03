@@ -440,7 +440,7 @@ void SSTableHandler::compact(int level)
     std::sort(sstablesToCompact.begin(), sstablesToCompact.end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
             return a.getSmallestKey() < b.getSmallestKey();
-        }
+        } 
         return a.getTimeId() < b.getTimeId();
     });
 
