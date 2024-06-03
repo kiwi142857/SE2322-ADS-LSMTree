@@ -63,6 +63,8 @@ class vLog
     vLog(std::fstream &file);
     ~vLog();
     static void append(std::list<std::pair<vLogEntry, uint64_t>> &entries, std::fstream &file);
-    std::string get(uint64_t offset, std::fstream &file);
+    static std::string get(uint64_t offset, std::fstream &file);
+    static vLogEntry getEntry(uint64_t offset, std::fstream &file);
+    static bool isValidEntry(uint64_t offset, std::fstream &file);
     
 };

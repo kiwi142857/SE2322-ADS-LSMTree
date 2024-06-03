@@ -17,9 +17,9 @@ class SSTableHandler
     std::vector<std::vector<SSTable>> sstables;
     int maxLevel;
     uint64_t timeId;
-    std::fstream vlogFile;
 
   public:
+    std::fstream vlogFile;
     // Constructor
     SSTableHandler() : maxLevel(0), timeId(0)
     {
@@ -36,6 +36,10 @@ class SSTableHandler
 
     // Function to get a value from the SSTables
     std::string get(uint64_t key);
+
+    // Function to get a value's offset from the SSTables
+    // return uint64_t max if key not found
+    uint64_t getOffset(uint64_t key);
 
     // Function to scan the SSTables for a range of keys
     void scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint64_t, std::string>> &list);

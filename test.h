@@ -8,6 +8,7 @@
 #include "utils.h"
 
 #define MB (1024 * 1024)
+#define KB (1024)
 
 class Test
 {
