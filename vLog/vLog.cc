@@ -6,7 +6,7 @@
 #include <vector>
 #include <fstream>
 
-char vLogEntry::magic = 'v';
+char vLogEntry::magic = 0xff;
 
 vLog::vLog(std::fstream &file)
 {

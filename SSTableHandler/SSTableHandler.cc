@@ -611,6 +611,11 @@ void SSTableHandler::init(){
             i++;
         }
     }
+
+    // remove the file in ./data/sstable
+    // TODO: do not do like this, you should choose an elegant way
+    // Remove the sstable directory
+    utils::rmrf("./data/sstable");
 }
 
 void SSTableHandler::input(std::string filename,int level, std::string fileSubName){
@@ -664,4 +669,5 @@ void SSTableHandler::input(std::string filename,int level, std::string fileSubNa
     sstables[level].push_back(sstable);
     file.close();
 
+    
 }
