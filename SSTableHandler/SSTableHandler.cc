@@ -221,7 +221,8 @@ void SSTableHandler::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint
 }
 
 void SSTableHandler::compactLevel0()
-{
+{   
+    bool isLastLevel = 0;
     // 统计Level0层所有SSTable覆盖的键的区间
     uint64_t minKey = std::numeric_limits<uint64_t>::max();
     uint64_t maxKey = 0;
@@ -244,6 +245,7 @@ void SSTableHandler::compactLevel0()
 
     // 当Level1不存在时
     if (sstables.size() == 1) {
+        isLastLevel = 1;
         sstables.push_back({});
     }
     for (auto it = sstables[1].begin(); it != sstables[1].end();) {
@@ -291,6 +293,10 @@ void SSTableHandler::compactLevel0()
     std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> newOffsetList;
     uint64_t pairNum = 0;
     for (auto &keyOffset : keyOffsetTable) {
+        // 如果是最后一层，需要将所有vlen为0的值丢弃
+        if (isLastLevel && keyOffset.second.second == 0) {
+            continue;
+        }
         newOffsetList.push_back(std::make_tuple(keyOffset.first, keyOffset.second.first, keyOffset.second.second));
         pairNum++;
         if (pairNum == MEMTABLE_THRESHOLD) {
@@ -378,7 +384,8 @@ void SSTableHandler::compactLevel0()
 
 // compact
 void SSTableHandler::compact(int level)
-{
+{   
+    bool isLastLevel = 0;
     // get the sstable from the level
     // just to make sure the size of this level no more than 2^(level+1)
     // 选择时间戳最小的若干个文件，如果时间戳相等选择键值最小的文件
@@ -416,6 +423,7 @@ void SSTableHandler::compact(int level)
     std::vector<SSTable> nextLevelSSTables;
     // 当下一层不存在时
     if (sstables.size() == level + 1) {
+        isLastLevel = 1;
         sstables.push_back({});
     }
 
@@ -474,6 +482,10 @@ void SSTableHandler::compact(int level)
     uint64_t pairNum = 0;
 
     for (auto &keyOffset : keyOffsetTable) {
+        // 如果是最后一层，需要将所有vlen为0的值丢弃
+        if (isLastLevel && keyOffset.second.second == 0) {
+            continue;
+        }
         newOffsetList.push_back(std::make_tuple(keyOffset.first, keyOffset.second.first, keyOffset.second.second));
         pairNum++;
         if (pairNum == MEMTABLE_THRESHOLD) {
