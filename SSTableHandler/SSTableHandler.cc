@@ -59,14 +59,14 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
             }
         } else {
             // output the sstable
-            if (utils::dirExists("./data/sstable/sstable0") == 0) {
-                if (utils::mkdir("./data/sstable/sstable0") != 0) {
-                    std::cerr << "Failed to create directory: " << "./data/sstable/sstable0" << std::endl;
+            if (utils::dirExists("./data/sstable/level-0") == 0) {
+                if (utils::mkdir("./data/sstable/level-0") != 0) {
+                    std::cerr << "Failed to create directory: " << "./data/sstable/level-0" << std::endl;
                     return;
                 }
             }
             std::stringstream ss;
-            ss << "./data/sstable/sstable0/sstable" << sstables[0].size() << ".sst";
+            ss << "./data/sstable/level-0/sstable" << sstables[0].size() << ".sst";
             std::string filename = ss.str();
             std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
             sstable.setFilename(filename);
@@ -180,8 +180,8 @@ void SSTableHandler::reset()
     sstables.clear();
 
     // 相应删除sstable0文件
-    utils::rmfile("./data/sstable/sstable0/sstable1");
-    utils::rmfile("./data/sstable/sstable0/sstable2");
+    utils::rmfile("./data/sstable/level-0/sstable1");
+    utils::rmfile("./data/sstable/level-0/sstable2");
 }
 
 // TODO: avoid unnecessary read | multiThread | binary search
@@ -324,16 +324,16 @@ void SSTableHandler::compactLevel0()
     }
 
     // output the sstable to level 1
-    if (utils::dirExists("./data/sstable/sstable1") == 0) {
-        if (utils::mkdir("./data/sstable/sstable1") != 0) {
-            std::cerr << "Failed to create directory: " << "./data/sstable/sstable1" << std::endl;
+    if (utils::dirExists("./data/sstable/level-1") == 0) {
+        if (utils::mkdir("./data/sstable/level-1") != 0) {
+            std::cerr << "Failed to create directory: " << "./data/sstable/level-1" << std::endl;
             return;
         }
     }
 
     // use utils::scanDir to get the largest sstable file number
     std::vector<std::string> files;
-    utils::scanDir("./data/sstable/sstable1", files);
+    utils::scanDir("./data/sstable/level-1", files);
     int fileNum = 0;
     for (auto &file : files) {
         std::string::size_type pos = file.find("sstable");
@@ -347,7 +347,7 @@ void SSTableHandler::compactLevel0()
     for (auto &sstable : newSSTables) {
         fileNum++;
         std::stringstream ss;
-        ss << "./data/sstable/sstable1/sstable" << fileNum << ".sst";
+        ss << "./data/sstable/level-1/sstable" << fileNum << ".sst";
         std::string filename = ss.str();
         std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
         sstable.setFilename(filename);
@@ -378,8 +378,8 @@ void SSTableHandler::compactLevel0()
     }
 
     // 删除Level0层的文件
-    utils::rmfile("./data/sstable/sstable0/sstable1");
-    utils::rmfile("./data/sstable/sstable0/sstable2");
+    utils::rmfile("./data/sstable/level-0/sstable1");
+    utils::rmfile("./data/sstable/level-0/sstable2");
 }
 
 // compact
@@ -513,9 +513,9 @@ void SSTableHandler::compact(int level)
     }
 
     // output the sstable to next level
-    if (utils::dirExists("./data/sstable/sstable" + std::to_string(level + 1)) == 0) {
-        if (utils::mkdir("./data/sstable/sstable" + std::to_string(level + 1)) != 0) {
-            std::cerr << "Failed to create directory: " << "./data/sstable/sstable" + std::to_string(level + 1)
+    if (utils::dirExists("./data/sstable/level-" + std::to_string(level + 1)) == 0) {
+        if (utils::mkdir("./data/sstable/level-" + std::to_string(level + 1)) != 0) {
+            std::cerr << "Failed to create directory: " << "./data/sstable/level-" + std::to_string(level + 1)
                       << std::endl;
             return;
         }
@@ -523,7 +523,7 @@ void SSTableHandler::compact(int level)
 
     // use utils::scanDir to get the largest sstable file number
     std::vector<std::string> files;
-    utils::scanDir("./data/sstable/sstable" + std::to_string(level + 1), files);
+    utils::scanDir("./data/sstable/level-" + std::to_string(level + 1), files);
     int fileNum = 0;
     for (auto &file : files) {
         std::string::size_type pos = file.find("sstable");
@@ -538,7 +538,7 @@ void SSTableHandler::compact(int level)
     for (auto &sstable : newSSTables) {
         fileNum++;
         std::stringstream ss;
-        ss << "./data/sstable/sstable" << level + 1 << "/sstable" << fileNum << ".sst";
+        ss << "./data/sstable/level-" << level + 1 << "/sstable" << fileNum << ".sst";
         std::string filename = ss.str();
         std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
         sstable.setFilename(filename);
@@ -581,7 +581,7 @@ void SSTableHandler::compact(int level)
 
 void SSTableHandler::init(){
 
-    // 文件名称示例 ./data/sstable/sstable0/sstable1; ./data/sstable/sstable1/sstable10
+    // 文件名称示例 ./data/sstable/level-0/sstable1; ./data/sstable/level-0/sstable10
     // get the sstable from the disk
     // 先查看有没有./data/sstable文件夹
     if (utils::dirExists("./data/sstable") == 0) {
