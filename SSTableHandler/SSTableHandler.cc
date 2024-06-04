@@ -66,7 +66,7 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
                 }
             }
             std::stringstream ss;
-            ss << "./data/sstable/sstable0/sstable" << sstables[0].size();
+            ss << "./data/sstable/sstable0/sstable" << sstables[0].size() << ".sst";
             std::string filename = ss.str();
             std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
             sstable.setFilename(filename);
@@ -341,7 +341,7 @@ void SSTableHandler::compactLevel0()
     for (auto &sstable : newSSTables) {
         fileNum++;
         std::stringstream ss;
-        ss << "./data/sstable/sstable1/sstable" << fileNum;
+        ss << "./data/sstable/sstable1/sstable" << fileNum << ".sst";
         std::string filename = ss.str();
         std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
         sstable.setFilename(filename);
@@ -526,7 +526,7 @@ void SSTableHandler::compact(int level)
     for (auto &sstable : newSSTables) {
         fileNum++;
         std::stringstream ss;
-        ss << "./data/sstable/sstable" << level + 1 << "/sstable" << fileNum;
+        ss << "./data/sstable/sstable" << level + 1 << "/sstable" << fileNum << ".sst";
         std::string filename = ss.str();
         std::fstream sstableFile(filename, std::ios::out | std::ios::binary);
         sstable.setFilename(filename);
