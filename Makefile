@@ -1,5 +1,5 @@
 LINK.o = $(LINK.cc)
-CXXFLAGS = -std=c++17 -Wall   -Ofast 
+CXXFLAGS = -std=c++17 -Wall   -Ofast -march=native -mtune=native -fopenmp
 CXX = g++
 
 all: correctness persistence

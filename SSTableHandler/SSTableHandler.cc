@@ -2,6 +2,7 @@
 #include "../vLog/vLog.h"
 #include <algorithm>
 #include <map>
+#include <bitset>
 
 void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
 {
@@ -366,7 +367,7 @@ void SSTableHandler::compactLevel0()
     // 删除Level1层的文件
     for (auto &file : filesToDelete) {
         if (utils::rmfile(file) != 0) {
-            std::cerr << "Failed to delete file: " << file << std::endl;
+            // std::cerr << "Failed to delete file: " << file << std::endl;
         }
     }
 
@@ -553,7 +554,7 @@ void SSTableHandler::compact(int level)
     // 删除需要删除的文件
     for (auto &file : filesToDelete) {
         if (utils::rmfile(file) != 0) {
-            std::cerr << "Failed to delete file: " << file << std::endl;
+            // std::cerr << "Failed to delete file: " << file << std::endl;
         }
     }
 
@@ -564,4 +565,103 @@ void SSTableHandler::compact(int level)
     }
 
     
+}
+
+void SSTableHandler::init(){
+
+    // 文件名称示例 ./data/sstable/sstable0/sstable1; ./data/sstable/sstable1/sstable10
+    // get the sstable from the disk
+    // 先查看有没有./data/sstable文件夹
+    if (utils::dirExists("./data/sstable") == 0) {
+        return;
+    }
+    // 查看sstable下有没有文件夹,如果有，记录下文件夹的名字
+    std::vector<std::string> files;
+    utils::scanDir("./data/sstable", files);
+    int i = 0;
+    for (auto &file : files) {
+        // 读取这个文件夹中所有的文件
+        // 找到最后一个'sstable'的位置
+        size_t pos = file.find_last_of("sstable");
+        if (pos != std::string::npos) {
+            // 获取'sstable'后面的数字
+            std::string numStr = file.substr(pos +1);
+            // 将数字字符串转换为整数
+            i = std::stoi(numStr);
+        } else {
+            printf("Error: sstable file name error\n");
+        }
+        if (utils::dirExists("./data/sstable/" + file) == 1) {
+            // 对于目录下所有文件，调用sstable.input，生成新的sstable对象，并存放在sstables对应的位置
+            std::vector<std::string> sstableFiles;
+            utils::scanDir("./data/sstable/" + file, sstableFiles);
+            for (auto &sstableFile : sstableFiles) {
+                std::string filePath = std::string("./data/sstable/") + std::string(file) + "/" + std::string(sstableFile);
+                std::fstream file(filePath, std::ios::in | std::ios::binary);
+                input(filePath,i, sstableFile);
+            }
+            // 对于本层的sstable进行排序，时间戳较大的排在后面，时间戳相同时，键值较大的排在后面
+            std::sort(sstables[i].begin(), sstables[i].end(), [](const SSTable &a, const SSTable &b) {
+                if (a.getTimeId() == b.getTimeId()) {
+                    return a.getSmallestKey() < b.getSmallestKey();
+                }
+                return a.getTimeId() < b.getTimeId();
+            });
+
+            i++;
+        }
+    }
+}
+
+void SSTableHandler::input(std::string filename,int level, std::string fileSubName){
+    std:: ifstream file(filename);
+    // 读取文件中的内容
+    
+    // 开头是时间戳，8 bytes
+    uint64_t timeId;
+    file.read((char *)&timeId, sizeof(timeId));
+    // update 时间戳
+    if (timeId > this->timeId) {
+        this->timeId = timeId;
+    }
+    // 读取pairNum
+    uint64_t pairNum;
+    file.read((char *)&pairNum, sizeof(pairNum));
+    // 读取maxKey
+    uint64_t maxKey;
+    file.read((char *)&maxKey, sizeof(maxKey));
+    // 读取minKey
+    uint64_t minKey;
+    file.read((char *)&minKey, sizeof(minKey));
+    // 读取bloomFilter
+    std::vector<bool> bloomFilter(64 * kb); // 64kb
+    for (int i = 0; i < bloomFilter.size(); i += 8) {
+        char byte;
+        file.read(&byte, sizeof(byte));
+        for (int j = 0; j < 8; j++) {
+            if (i + j < bloomFilter.size()) {
+                bloomFilter[i + j] = (byte >> j) & 1;
+            }
+        }
+    }
+
+    // 读取keyOffsetTable
+    std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable;
+    for (int i = 0; i < pairNum; i++) {
+        uint64_t key;
+        uint64_t offset;
+        uint32_t vlen;
+        file.read((char *)&key, sizeof(key));
+        file.read((char *)&offset, sizeof(offset));
+        file.read((char *)&vlen, sizeof(vlen));
+        keyOffsetTable.push_back(std::make_tuple(key, offset, vlen));
+    }
+    SSTable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
+    sstable.setFilename(fileSubName);
+    while(sstables.size() <= level){
+        sstables.push_back({});
+    }
+    sstables[level].push_back(sstable);
+    file.close();
+
 }

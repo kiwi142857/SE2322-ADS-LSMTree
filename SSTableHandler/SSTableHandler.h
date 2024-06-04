@@ -53,6 +53,9 @@ class SSTableHandler
     // Function to initialize the SSTables from disk
     void init();
 
+    // Function to input file
+    void input(std::string filename, int level, std::string fileSubName);
+
     // Function to perform compaction on a level
     void compact(int level);
 

@@ -7,6 +7,7 @@
 
 KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
 {
+    sstables.init();
 }
 
 KVStore::~KVStore()
