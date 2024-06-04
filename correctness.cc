@@ -9,7 +9,7 @@ class CorrectnessTest : public Test
 {
 private:
 	const uint64_t SIMPLE_TEST_MAX = 512;
-	const uint64_t MEDIUM_TEST_MAX = 1024 * 2;
+	
 	const uint64_t LARGE_TEST_MAX = 1024 * 64;
 	const uint64_t GC_TEST_MAX = 1024 * 48;
 
@@ -72,8 +72,8 @@ private:
 		}
 
 		phase();
-		
-		// Test deletions	
+
+		// Test deletions
 		for (i = 0; i < max; i += 2)
 		{
 			EXPECT(true, store.del(i));
@@ -205,12 +205,6 @@ public:
 
 		std::cout << "[Simple Test]" << std::endl;
 		regular_test(SIMPLE_TEST_MAX);
-
-		store.reset();
-
-		// for debug
-		std::cout << "[Medium Test]" << std::endl;
-		regular_test(MEDIUM_TEST_MAX);
 
 		store.reset();
 
