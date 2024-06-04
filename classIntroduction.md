@@ -65,4 +65,4 @@ do_alloc_file()
 
 
 TODO:
-1. remove file dir
+1. init读取文件
