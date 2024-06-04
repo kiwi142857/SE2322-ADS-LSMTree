@@ -594,7 +594,7 @@ void SSTableHandler::init(){
     for (auto &file : files) {
         // 读取这个文件夹中所有的文件
         // 找到最后一个'sstable'的位置
-        size_t pos = file.find_last_of("sstable");
+        size_t pos = file.find_last_of("level-");
         if (pos != std::string::npos) {
             // 获取'sstable'后面的数字
             std::string numStr = file.substr(pos +1);
