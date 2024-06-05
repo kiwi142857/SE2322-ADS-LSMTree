@@ -1,8 +1,10 @@
 #include "./SSTableHandler.h"
 #include "../vLog/vLog.h"
 #include <algorithm>
-#include <map>
 #include <bitset>
+#include <map>
+
+#define ALLCACHEED
 
 void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
 {
@@ -86,6 +88,8 @@ std::string SSTableHandler::get(uint64_t key)
         // Iterate through the SSTable objects
         int sstableSize = sstables[i].size() - 1;
         for (int j = sstableSize; j >= 0; j--) {
+#ifndef ALLCACHEED
+
             // check if the key is between the max and min key of the sstable
             if (key >= sstables[i][j].getSmallestKey() && key <= sstables[i][j].getLargestKey()) {
                 // check the bloom filter
@@ -125,6 +129,87 @@ std::string SSTableHandler::get(uint64_t key)
 
                 return value;
             }
+
+#endif
+
+#ifdef CACHEED_INDEX
+
+            // Get the offset of the key in the SSTable
+            auto offset = sstables[i][j].getOffset(key);
+            if (std::get<0>(offset) == key) {
+
+                if (std::get<2>(offset) == 0) {
+                    return "";
+                }
+
+                // Seek to the offset in the vlog file
+                vlogFile.seekg(std::get<1>(offset) + 15);
+
+                // Read the value from the vlog file
+                std::string value(std::get<2>(offset), ' ');
+                vlogFile.read(&value[0], std::get<2>(offset));
+
+                // for debug
+                if (key == 1 && value == "  ") {
+                    // print the 0 ~ 2*get<2>(offset) bytes of vlog
+                    vlogFile.seekg(0);
+                    int size = 16 * std::get<2>(offset);
+                    char *buf = new char[size + 1]; // Add 1 for the null terminator
+                    vlogFile.read(buf, size);
+                    buf[size] = '\0'; // Add the null terminator
+                    std::cout << "key: " << key << " value: " << value << " buf: " << buf << std::endl;
+                    delete[] buf; // Don't forget to delete buf when you're done with it
+                }
+
+                return value;
+            }
+
+#endif
+
+#ifndef NOCACHEED
+
+            // 读取文件中的内容
+            SSTable sstable = input(sstables[i][j].getFilename());
+            // check if the key is between the max and min key of the sstable
+            if (key >= sstables[i][j].getSmallestKey() && key <= sstables[i][j].getLargestKey()) {
+                // check the bloom filter
+                if (!sstables[i][j].checkBloomFilter(key)) {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+
+            // Get the offset of the key in the SSTable
+            auto offset = sstables[i][j].getOffset(key);
+            if (std::get<0>(offset) == key) {
+
+                if (std::get<2>(offset) == 0) {
+                    return "";
+                }
+
+                // Seek to the offset in the vlog file
+                vlogFile.seekg(std::get<1>(offset) + 15);
+
+                // Read the value from the vlog file
+                std::string value(std::get<2>(offset), ' ');
+                vlogFile.read(&value[0], std::get<2>(offset));
+
+                // for debug
+                if (key == 1 && value == "  ") {
+                    // print the 0 ~ 2*get<2>(offset) bytes of vlog
+                    vlogFile.seekg(0);
+                    int size = 16 * std::get<2>(offset);
+                    char *buf = new char[size + 1]; // Add 1 for the null terminator
+                    vlogFile.read(buf, size);
+                    buf[size] = '\0'; // Add the null terminator
+                    std::cout << "key: " << key << " value: " << value << " buf: " << buf << std::endl;
+                    delete[] buf; // Don't forget to delete buf when you're done with it
+                }
+
+                return value;
+            }
+#endif
         }
     }
 
@@ -179,7 +264,6 @@ void SSTableHandler::reset()
 
     // delete all the sstable
     sstables.clear();
-
 }
 
 // TODO: avoid unnecessary read | multiThread | binary search
@@ -219,7 +303,7 @@ void SSTableHandler::scan(uint64_t key1, uint64_t key2, std::list<std::pair<uint
 }
 
 void SSTableHandler::compactLevel0()
-{   
+{
     bool isLastLevel = 0;
     // 统计Level0层所有SSTable覆盖的键的区间
     uint64_t minKey = std::numeric_limits<uint64_t>::max();
@@ -279,7 +363,7 @@ void SSTableHandler::compactLevel0()
         SSTable &sstable = sstableRef.get(); // Access the underlying SSTable object
         std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList = sstable.getItem();
         for (auto &offset : offsetList) {
-            
+
             keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
         }
     }
@@ -383,7 +467,7 @@ void SSTableHandler::compactLevel0()
 
 // compact
 void SSTableHandler::compact(int level)
-{   
+{
     bool isLastLevel = 0;
     // get the sstable from the level
     // just to make sure the size of this level no more than 2^(level+1)
@@ -395,8 +479,6 @@ void SSTableHandler::compact(int level)
     int compactSize = levelSize - legalSize;
 
     std::vector<std::string> filesToDelete;
-
-    
 
     for (int i = 0; i < compactSize; i++) {
         filesToDelete.push_back(sstables[level][i].getFilename());
@@ -448,7 +530,7 @@ void SSTableHandler::compact(int level)
     std::sort(sstablesToCompact.begin(), sstablesToCompact.end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
             return a.getSmallestKey() < b.getSmallestKey();
-        } 
+        }
         return a.getTimeId() < b.getTimeId();
     });
 
@@ -460,7 +542,7 @@ void SSTableHandler::compact(int level)
     for (auto &sstable : sstablesToCompact) {
         allSSTables.push_back(sstable);
     }
-    
+
     // 获取最大时间戳
     uint64_t maxTimeId = allSSTables.back().get().getTimeId();
 
@@ -470,7 +552,7 @@ void SSTableHandler::compact(int level)
         SSTable &sstable = sstableRef.get(); // Access the underlying SSTable object
         std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> &offsetList = sstable.getItem();
         for (auto &offset : offsetList) {
-            
+
             keyOffsetTable[std::get<0>(offset)] = std::make_pair(std::get<1>(offset), std::get<2>(offset));
         }
     }
@@ -560,7 +642,7 @@ void SSTableHandler::compact(int level)
     for (int i = 0; i < compactSize; i++) {
         sstables[level].erase(sstables[level].begin());
     }
-    
+
     // 删除需要删除的文件
     for (auto &file : filesToDelete) {
         if (utils::rmfile(file) != 0) {
@@ -568,16 +650,14 @@ void SSTableHandler::compact(int level)
         }
     }
 
-
     // 判断是否需要递归合并下一层
     if (sstables[level + 1].size() > (1 << (level + 2))) {
         compact(level + 1);
     }
-
-    
 }
 
-void SSTableHandler::init(){
+void SSTableHandler::init()
+{
 
     // 文件名称示例 ./data/sstable/level-0/sstable1; ./data/sstable/level-0/sstable10
     // get the sstable from the disk
@@ -595,7 +675,7 @@ void SSTableHandler::init(){
         size_t pos = file.find_last_of("level-");
         if (pos != std::string::npos) {
             // 获取'sstable'后面的数字
-            std::string numStr = file.substr(pos +1);
+            std::string numStr = file.substr(pos + 1);
             // 将数字字符串转换为整数
             i = std::stoi(numStr);
         } else {
@@ -606,9 +686,10 @@ void SSTableHandler::init(){
             std::vector<std::string> sstableFiles;
             utils::scanDir(dir + "/sstable/" + file, sstableFiles);
             for (auto &sstableFile : sstableFiles) {
-                std::string filePath = std::string(dir + "/sstable/") + std::string(file) + "/" + std::string(sstableFile);
+                std::string filePath =
+                    std::string(dir + "/sstable/") + std::string(file) + "/" + std::string(sstableFile);
                 std::fstream file(filePath, std::ios::in | std::ios::binary);
-                input(filePath,i, sstableFile);
+                input(filePath, i, sstableFile);
             }
             // 对于本层的sstable进行排序，时间戳较大的排在后面，时间戳相同时，键值较大的排在后面
             std::sort(sstables[i].begin(), sstables[i].end(), [](const SSTable &a, const SSTable &b) {
@@ -628,10 +709,11 @@ void SSTableHandler::init(){
     utils::rmrf(dir + "/sstable");
 }
 
-void SSTableHandler::input(std::string filename,int level, std::string fileSubName){
-    std:: ifstream file(filename);
+void SSTableHandler::input(std::string filename, int level, std::string fileSubName)
+{
+    std::ifstream file(filename);
     // 读取文件中的内容
-    
+
     // 开头是时间戳，8 bytes
     uint64_t timeId;
     file.read((char *)&timeId, sizeof(timeId));
@@ -673,11 +755,59 @@ void SSTableHandler::input(std::string filename,int level, std::string fileSubNa
     }
     SSTable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
     sstable.setFilename(fileSubName);
-    while(sstables.size() <= level){
+    while (sstables.size() <= level) {
         sstables.push_back({});
     }
     sstables[level].push_back(sstable);
     file.close();
+}
 
-    
+SSTable SSTableHandler::input(std::string filename)
+{
+
+    std::ifstream file(filename);
+    // 读取文件中的内容
+
+    // 开头是时间戳，8 bytes
+    uint64_t timeId;
+    file.read((char *)&timeId, sizeof(timeId));
+    // update 时间戳
+    if (timeId > this->timeId) {
+        this->timeId = timeId;
+    }
+    // 读取pairNum
+    uint64_t pairNum;
+    file.read((char *)&pairNum, sizeof(pairNum));
+    // 读取maxKey
+    uint64_t maxKey;
+    file.read((char *)&maxKey, sizeof(maxKey));
+    // 读取minKey
+    uint64_t minKey;
+    file.read((char *)&minKey, sizeof(minKey));
+    // 读取bloomFilter
+    std::vector<bool> bloomFilter(64 * kb); // 64kb
+    for (int i = 0; i < bloomFilter.size(); i += 8) {
+        char byte;
+        file.read(&byte, sizeof(byte));
+        for (int j = 0; j < 8; j++) {
+            if (i + j < bloomFilter.size()) {
+                bloomFilter[i + j] = (byte >> j) & 1;
+            }
+        }
+    }
+
+    // 读取keyOffsetTable
+    std::vector<std::tuple<uint64_t, uint64_t, uint32_t>> keyOffsetTable;
+    for (int i = 0; i < pairNum; i++) {
+        uint64_t key;
+        uint64_t offset;
+        uint32_t vlen;
+        file.read((char *)&key, sizeof(key));
+        file.read((char *)&offset, sizeof(offset));
+        file.read((char *)&vlen, sizeof(vlen));
+        keyOffsetTable.push_back(std::make_tuple(key, offset, vlen));
+    }
+    SSTable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
+    sstable.setFilename(filename);
+    return sstable;
 }

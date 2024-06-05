@@ -58,6 +58,9 @@ class SSTableHandler
     // Function to input file
     void input(std::string filename, int level, std::string fileSubName);
 
+    // Function to input file
+    SSTable input(std::string filename);
+
     // Function to perform compaction on a level
     void compact(int level);
 

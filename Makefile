@@ -3,13 +3,16 @@ CXXFLAGS = -std=c++17 -Wall   -Ofast -march=native -mtune=native -fopenmp
 #CXXFLAGS = -std=c++17 -Wall   -g
 CXX = g++
 
-all: correctness persistence
+all: correctness persistence performance
 
 correctness: kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
 	$(LINK.o) -o correctness kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
 
 persistence: kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
 	$(LINK.o) -o persistence kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+
+performance: kvstore.o performance.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+	$(LINK.o) -o performance kvstore.o performance.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
 
 kvstore.o: kvstore.cc
 	$(CXX) $(CXXFLAGS)  -c kvstore.cc
@@ -20,6 +23,9 @@ correctness.o: correctness.cc
 persistence.o: persistence.cc
 	$(CXX) $(CXXFLAGS)  -c persistence.cc
 
+performance.o: performance.cc
+	$(CXX) $(CXXFLAGS)  -c performance.cc
+	
 memTable.o: ./MemTable/memTable.cc
 	$(CXX) $(CXXFLAGS)  -c ./MemTable/memTable.cc
 
