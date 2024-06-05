@@ -5,9 +5,11 @@
 #include "utils.h"
 #include <string>
 
-KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog)
+KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog), sstables(dir, vlog)
 {
     sstables.init();
+    this->dir = dir;
+    this->vlog = vlog;
 }
 
 KVStore::~KVStore()
@@ -87,7 +89,7 @@ void KVStore::gc(uint64_t chunk_size)
 
     // since there maybe some gc operation done before, so we need to get the first valid data block in vlogFile
     // use utils::seek_data_block to get the offset of the first data block
-    off_t offset = utils::seek_data_block("./data/vlog");
+    off_t offset = utils::seek_data_block(vlog);
     off_t start_offset = offset;
     std::fstream &vlogFile = sstables.vlogFile;
     // search vLog entry sign 'v', if not found, output an error message
@@ -136,5 +138,5 @@ void KVStore::gc(uint64_t chunk_size)
     memtable.setSize(0);
 
     // 使用utils::de_alloc_file()释放vlogFile的空间
-    utils::de_alloc_file("./data/vlog", start_offset, offset - start_offset);
+    utils::de_alloc_file(vlog, start_offset, offset - start_offset);
 }

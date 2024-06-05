@@ -17,13 +17,15 @@ class SSTableHandler
     std::vector<std::vector<SSTable>> sstables;
     int maxLevel;
     uint64_t timeId;
+    std::string dir;
+    std::string vlog;
 
   public:
     std::fstream vlogFile;
     // Constructor
-    SSTableHandler() : maxLevel(0), timeId(0)
+    SSTableHandler(std::string dir, std::string vlog) : maxLevel(0), timeId(0), dir(dir), vlog(vlog)
     {
-        vlogFile.open("./data/vlog", std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
+        vlogFile.open(vlog, std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
     };
 
     ~SSTableHandler()

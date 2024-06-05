@@ -12,6 +12,8 @@ private:
 	// std::string dir;
 	// std::string vlog;
 	SSTableHandler sstables;
+	std::string dir;
+	std::string vlog;
 
 public:
 	KVStore(const std::string &dir, const std::string &vlog);
