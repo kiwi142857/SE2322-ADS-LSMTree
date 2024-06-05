@@ -6,7 +6,7 @@ data/*
 
 *.o
 
-
+correctness
 persistence
 
 .gitignore
