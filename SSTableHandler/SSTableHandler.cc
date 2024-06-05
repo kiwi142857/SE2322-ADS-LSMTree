@@ -672,7 +672,7 @@ void SSTableHandler::input(std::string filename,int level, std::string fileSubNa
         keyOffsetTable.push_back(std::make_tuple(key, offset, vlen));
     }
     SSTable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
-    sstable.setFilename(fileSubName);
+    sstable.setFilename(filename);
     while(sstables.size() <= level){
         sstables.push_back({});
     }
