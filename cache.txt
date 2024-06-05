@@ -1,0 +1,64 @@
+Get performance test
+Cache: All Cached
+Number of operations: 512
+Average latency: 0.00106642 milliseconds
+Throughput: 937717 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 16384
+Average latency: 0.00287328 milliseconds
+Throughput: 348034 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 32768
+Average latency: 0.003624 milliseconds
+Throughput: 275938 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 65536
+Average latency: 0.0391222 milliseconds
+Throughput: 25560.9 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: Index Only
+Number of operations: 512
+Average latency: 0.00128993 milliseconds
+Throughput: 775236 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: Index Only
+Number of operations: 16384
+Average latency: 0.00325693 milliseconds
+Throughput: 307038 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: Index Only
+Number of operations: 32768
+Average latency: 0.00494507 milliseconds
+Throughput: 202221 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: Index Only
+Number of operations: 65536
+Average latency: 0.046587 milliseconds
+Throughput: 21465.2 operations per second
+----------------------------------------
+
+

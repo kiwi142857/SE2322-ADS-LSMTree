@@ -1,0 +1,305 @@
+Bloom Filter size: 6 kB
+Put performance test
+Number of operations: 512
+Average latency: 0.00183647 milliseconds
+Throughput: 544524 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 512
+Average latency: 0.00104579 milliseconds
+Throughput: 956212 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 16384
+Average latency: 0.0744378 milliseconds
+Throughput: 13434 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 16384
+Average latency: 0.00285565 milliseconds
+Throughput: 350182 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 32768
+Average latency: 0.123801 milliseconds
+Throughput: 8077.49 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 32768
+Average latency: 0.00375174 milliseconds
+Throughput: 266543 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 65536
+Average latency: 0.249342 milliseconds
+Throughput: 4010.56 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 65536
+Average latency: 0.0690177 milliseconds
+Throughput: 14489 operations per second
+----------------------------------------
+
+
+Bloom Filter size: 8 kB
+Put performance test
+Number of operations: 512
+Average latency: 0.00153975 milliseconds
+Throughput: 649457 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 512
+Average latency: 0.000568863 milliseconds
+Throughput: 1.75789e+06 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 16384
+Average latency: 0.0666638 milliseconds
+Throughput: 15000.6 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 16384
+Average latency: 0.00262373 milliseconds
+Throughput: 381136 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 32768
+Average latency: 0.118833 milliseconds
+Throughput: 8415.19 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 32768
+Average latency: 0.00390456 milliseconds
+Throughput: 256111 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 65536
+Average latency: 0.243106 milliseconds
+Throughput: 4113.43 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 65536
+Average latency: 0.00976415 milliseconds
+Throughput: 102415 operations per second
+----------------------------------------
+
+
+Bloom Filter size: 14 kB
+Put performance test
+Number of operations: 512
+Average latency: 0.00190638 milliseconds
+Throughput: 524555 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 512
+Average latency: 0.0010264 milliseconds
+Throughput: 974279 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 16384
+Average latency: 0.0700514 milliseconds
+Throughput: 14275.2 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 16384
+Average latency: 0.00252605 milliseconds
+Throughput: 395875 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 32768
+Average latency: 0.182234 milliseconds
+Throughput: 5487.45 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 32768
+Average latency: 0.00383 milliseconds
+Throughput: 261097 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 65536
+Average latency: 0.237872 milliseconds
+Throughput: 4203.94 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 65536
+Average latency: 0.0221592 milliseconds
+Throughput: 45128 operations per second
+----------------------------------------
+
+
+Bloom Filter size: 12 kB
+Put performance test
+Number of operations: 512
+Average latency: 0.00182242 milliseconds
+Throughput: 548720 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 512
+Average latency: 0.00100427 milliseconds
+Throughput: 995751 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 16384
+Average latency: 0.0623796 milliseconds
+Throughput: 16030.9 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 16384
+Average latency: 0.00246617 milliseconds
+Throughput: 405488 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 32768
+Average latency: 0.120289 milliseconds
+Throughput: 8313.31 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 32768
+Average latency: 0.00364032 milliseconds
+Throughput: 274701 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 65536
+Average latency: 0.250606 milliseconds
+Throughput: 3990.33 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 65536
+Average latency: 0.0353747 milliseconds
+Throughput: 28268.8 operations per second
+----------------------------------------
+
+
+Bloom Filter size: 10 kB
+Put performance test
+Number of operations: 512
+Average latency: 0.00108698 milliseconds
+Throughput: 919978 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 512
+Average latency: 0.0003851 milliseconds
+Throughput: 2.59673e+06 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 16384
+Average latency: 0.0704029 milliseconds
+Throughput: 14204 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 16384
+Average latency: 0.00252683 milliseconds
+Throughput: 395754 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 32768
+Average latency: 0.123841 milliseconds
+Throughput: 8074.89 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 32768
+Average latency: 0.0036067 milliseconds
+Throughput: 277261 operations per second
+----------------------------------------
+
+
+Put performance test
+Number of operations: 65536
+Average latency: 0.234006 milliseconds
+Throughput: 4273.39 operations per second
+----------------------------------------
+
+
+Get performance test
+Cache: All Cached
+Number of operations: 65536
+Average latency: 0.0227364 milliseconds
+Throughput: 43982.3 operations per second
+----------------------------------------
+
+
