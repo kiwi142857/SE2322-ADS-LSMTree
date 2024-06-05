@@ -2,6 +2,7 @@
 #include "../vLog/vLog.h"
 #include <algorithm>
 #include <bitset>
+#include <filesystem>
 #include <map>
 
 #define ALLCACHEED
@@ -61,6 +62,7 @@ void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
             if (sstables[1].size() > 4) {
                 compact(1);
             }
+            
         } else {
             // output the sstable
             std::string level0Dir = dir + "/sstable/level-0";
@@ -93,7 +95,7 @@ std::string SSTableHandler::get(uint64_t key)
 #ifdef NOCHACHEED
 
     SSTable sstable = input(sstables[i][j].getFilename());
-    auto offset = sstable.getOffset(key);
+    auto offset = sstables[i][j].getOffset(key);
 
 #endif
 
@@ -739,6 +741,8 @@ SSTable SSTableHandler::input(std::string filename)
         keyOffsetTable.push_back(std::make_tuple(key, offset, vlen));
     }
     SSTable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
-    sstable.setFilename(filename);
+    
+    std::filesystem::path filepath(filename);
+    sstable.setFilename(filepath.filename().string());
     return sstable;
 }
