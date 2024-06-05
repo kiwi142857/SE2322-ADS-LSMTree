@@ -5,6 +5,8 @@
 #include <map>
 
 #define ALLCACHEED
+// #define CHACHE_INDEX_ONLY
+// #define NOCHACHEED
 
 void SSTableHandler::convertMemTableToSSTable(MemTable &memTable)
 {
@@ -88,7 +90,14 @@ std::string SSTableHandler::get(uint64_t key)
         // Iterate through the SSTable objects
         int sstableSize = sstables[i].size() - 1;
         for (int j = sstableSize; j >= 0; j--) {
-#ifndef ALLCACHEED
+#ifdef NOCHACHEED
+
+    SSTable sstable = input(sstables[i][j].getFilename());
+    auto offset = sstable.getOffset(key);
+
+#endif
+
+#ifndef CHACHE_INDEX_ONLY
 
             // check if the key is between the max and min key of the sstable
             if (key >= sstables[i][j].getSmallestKey() && key <= sstables[i][j].getLargestKey()) {
@@ -99,9 +108,12 @@ std::string SSTableHandler::get(uint64_t key)
             } else {
                 continue;
             }
+#endif
 
+#ifndef NOCHACHEED
             // Get the offset of the key in the SSTable
             auto offset = sstables[i][j].getOffset(key);
+#endif
             if (std::get<0>(offset) == key) {
 
                 if (std::get<2>(offset) == 0) {
@@ -129,87 +141,6 @@ std::string SSTableHandler::get(uint64_t key)
 
                 return value;
             }
-
-#endif
-
-#ifdef CACHEED_INDEX
-
-            // Get the offset of the key in the SSTable
-            auto offset = sstables[i][j].getOffset(key);
-            if (std::get<0>(offset) == key) {
-
-                if (std::get<2>(offset) == 0) {
-                    return "";
-                }
-
-                // Seek to the offset in the vlog file
-                vlogFile.seekg(std::get<1>(offset) + 15);
-
-                // Read the value from the vlog file
-                std::string value(std::get<2>(offset), ' ');
-                vlogFile.read(&value[0], std::get<2>(offset));
-
-                // for debug
-                if (key == 1 && value == "  ") {
-                    // print the 0 ~ 2*get<2>(offset) bytes of vlog
-                    vlogFile.seekg(0);
-                    int size = 16 * std::get<2>(offset);
-                    char *buf = new char[size + 1]; // Add 1 for the null terminator
-                    vlogFile.read(buf, size);
-                    buf[size] = '\0'; // Add the null terminator
-                    std::cout << "key: " << key << " value: " << value << " buf: " << buf << std::endl;
-                    delete[] buf; // Don't forget to delete buf when you're done with it
-                }
-
-                return value;
-            }
-
-#endif
-
-#ifndef NOCACHEED
-
-            // 读取文件中的内容
-            SSTable sstable = input(sstables[i][j].getFilename());
-            // check if the key is between the max and min key of the sstable
-            if (key >= sstables[i][j].getSmallestKey() && key <= sstables[i][j].getLargestKey()) {
-                // check the bloom filter
-                if (!sstables[i][j].checkBloomFilter(key)) {
-                    continue;
-                }
-            } else {
-                continue;
-            }
-
-            // Get the offset of the key in the SSTable
-            auto offset = sstables[i][j].getOffset(key);
-            if (std::get<0>(offset) == key) {
-
-                if (std::get<2>(offset) == 0) {
-                    return "";
-                }
-
-                // Seek to the offset in the vlog file
-                vlogFile.seekg(std::get<1>(offset) + 15);
-
-                // Read the value from the vlog file
-                std::string value(std::get<2>(offset), ' ');
-                vlogFile.read(&value[0], std::get<2>(offset));
-
-                // for debug
-                if (key == 1 && value == "  ") {
-                    // print the 0 ~ 2*get<2>(offset) bytes of vlog
-                    vlogFile.seekg(0);
-                    int size = 16 * std::get<2>(offset);
-                    char *buf = new char[size + 1]; // Add 1 for the null terminator
-                    vlogFile.read(buf, size);
-                    buf[size] = '\0'; // Add the null terminator
-                    std::cout << "key: " << key << " value: " << value << " buf: " << buf << std::endl;
-                    delete[] buf; // Don't forget to delete buf when you're done with it
-                }
-
-                return value;
-            }
-#endif
         }
     }
 
