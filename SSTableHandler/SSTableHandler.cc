@@ -601,12 +601,12 @@ void SSTableHandler::init(){
         } else {
             printf("Error: sstable file name error\n");
         }
-        if (utils::dirExists(dir + "/sstable/" + file) == 0) {
+        if (utils::dirExists(dir + "/sstable/" + file) == 1) {
             // 对于目录下所有文件，调用sstable.input，生成新的sstable对象，并存放在sstables对应的位置
             std::vector<std::string> sstableFiles;
             utils::scanDir(dir + "/sstable/" + file, sstableFiles);
             for (auto &sstableFile : sstableFiles) {
-                std::string filePath = dir + std::string("/sstable/") + std::string(file) + "/" + std::string(sstableFile);
+                std::string filePath = std::string(dir + "/sstable/") + std::string(file) + "/" + std::string(sstableFile);
                 std::fstream file(filePath, std::ios::in | std::ios::binary);
                 input(filePath,i, sstableFile);
             }
@@ -672,7 +672,7 @@ void SSTableHandler::input(std::string filename,int level, std::string fileSubNa
         keyOffsetTable.push_back(std::make_tuple(key, offset, vlen));
     }
     SSTable sstable(timeId, pairNum, maxKey, minKey, bloomFilter, keyOffsetTable);
-    sstable.setFilename(filename);
+    sstable.setFilename(fileSubName);
     while(sstables.size() <= level){
         sstables.push_back({});
     }
