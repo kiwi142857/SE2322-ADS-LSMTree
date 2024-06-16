@@ -282,7 +282,7 @@ void SSTableHandler::compactLevel0()
         allSSTables.push_back(sstable);
     }
 
-    // 对所有的SSTable进行排序，时间戳相同时，键值较小的SSTable排在后面
+    // 对所有的SSTable进行排序，时间戳相同时，键值较大的SSTable排在后面
     std::sort(allSSTables.begin(), allSSTables.end(), [](const SSTable &a, const SSTable &b) {
         if (a.getTimeId() == b.getTimeId()) {
             return a.getSmallestKey() < b.getSmallestKey();
