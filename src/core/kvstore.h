@@ -1,8 +1,9 @@
 #pragma once
 
 #include "kvstore_api.h"
-#include "./sstable/sstable.h"
-#include "./SSTableHandler/SSTableHandler.h"
+#include "../memtable/memTable.h"
+#include "../sstable/sstable.h"
+#include "../sstable/SSTableHandler.h"
 
 class KVStore : public KVStoreAPI
 {

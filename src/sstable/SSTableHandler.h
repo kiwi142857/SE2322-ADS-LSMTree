@@ -1,9 +1,14 @@
 #pragma once
-#include "../MemTable/memTable.h"
-#include "../sstable/sstable.h"
-#include "../vLog/vLog.h"
-#include <optional>
+
+#include <string>
+#include <fstream>
+#include <list>
 #include <vector>
+#include <utility>
+#include "../memtable/memTable.h"
+#include "../utils/bloomFilter.h"
+#include "../vlog/vLog.h"
+#include "sstable.h"
 
 #define kb 1024
 #define mb 1024 * kb
@@ -14,7 +19,7 @@
 class SSTableHandler
 {
     // SSTable objects
-    std::vector<std::vector<SSTable>> sstables;
+    std::vector<SSTable*> sstables;
     int maxLevel;
     uint64_t timeId;
     std::string dir;
@@ -23,7 +28,7 @@ class SSTableHandler
   public:
     std::fstream vlogFile;
     // Constructor
-    SSTableHandler(std::string dir, std::string vlog) : maxLevel(0), timeId(0), dir(dir), vlog(vlog)
+    SSTableHandler(const std::string &dir, const std::string &vlog) : maxLevel(0), timeId(0), dir(dir), vlog(vlog)
     {
         vlogFile.open(vlog, std::ios::in | std::ios::out | std::ios::app | std::ios::binary);
     };
@@ -34,7 +39,7 @@ class SSTableHandler
     }
 
     // Function to convert a MemTable to a SSTable
-    void convertMemTableToSSTable(MemTable &memTable);
+    void convertMemTableToSSTable(const MemTable &memtable);
 
     // Function to get a value from the SSTables
     std::string get(uint64_t key);

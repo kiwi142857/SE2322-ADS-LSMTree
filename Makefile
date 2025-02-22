@@ -1,48 +1,46 @@
-LINK.o = $(LINK.cc)
-CXXFLAGS = -std=c++17 -Wall   -Ofast -march=native -mtune=native -fopenmp
-#CXXFLAGS = -std=c++17 -Wall   -g
-CXX = g++-9
+CXX = g++
+CXXFLAGS = -std=c++11 -g -Wall -Wextra
 
-all: correctness persistence performance
+# Directories
+SRC_DIR = src
+TEST_DIR = tests
 
-correctness: kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
-	$(LINK.o) -o correctness kvstore.o correctness.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+# Source files
+SRCS = $(wildcard $(SRC_DIR)/core/*.cc) \
+       $(wildcard $(SRC_DIR)/memtable/*.cc) \
+       $(wildcard $(SRC_DIR)/sstable/*.cc) \
+       $(wildcard $(SRC_DIR)/utils/*.cc) \
+       $(wildcard $(SRC_DIR)/vlog/*.cc)
 
-persistence: kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
-	$(LINK.o) -o persistence kvstore.o persistence.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+# Object files
+OBJS = $(SRCS:.cc=.o)
 
-performance: kvstore.o performance.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
-	$(LINK.o) -o performance kvstore.o performance.o memTable.o skiplist.o vLog.o sstable.o bloomFilter.o SSTableHandler.o
+# Include directories
+INCLUDES = -I$(SRC_DIR)
 
-kvstore.o: kvstore.cc
-	$(CXX) $(CXXFLAGS)  -c kvstore.cc
+# Test targets
+TEST_TARGETS = correctness persistence performance
 
-correctness.o: correctness.cc
-	$(CXX) $(CXXFLAGS)  -c correctness.cc
+# Default target
+all: $(TEST_TARGETS)
 
-persistence.o: persistence.cc
-	$(CXX) $(CXXFLAGS)  -c persistence.cc
+# Compile source files
+%.o: %.cc
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
-performance.o: performance.cc
-	$(CXX) $(CXXFLAGS)  -c performance.cc
-	
-memTable.o: ./MemTable/memTable.cc
-	$(CXX) $(CXXFLAGS)  -c ./MemTable/memTable.cc
+# Link test executables
+correctness: $(TEST_DIR)/correctness.cc $(OBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
-skiplist.o: ./MemTable/skiplist.cc
-	$(CXX) $(CXXFLAGS)  -c ./MemTable/skiplist.cc
+persistence: $(TEST_DIR)/persistence.cc $(OBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
-vLog.o: ./vLog/vLog.cc
-	$(CXX) $(CXXFLAGS)  -c ./vLog/vLog.cc
+performance: $(TEST_DIR)/performance.cc $(OBJS)
+	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ -o $@
 
-sstable.o: ./sstable/sstable.cc
-	$(CXX) $(CXXFLAGS)  -c ./sstable/sstable.cc
-
-bloomFilter.o: ./bloomFilter/bloomFilter.cc
-	$(CXX) $(CXXFLAGS)  -c ./bloomFilter/bloomFilter.cc
-
-SSTableHandler.o: ./SSTableHandler/SSTableHandler.cc
-	$(CXX) $(CXXFLAGS)  -c ./SSTableHandler/SSTableHandler.cc
-
+# Clean
 clean:
-	-rm -f correctness persistence *.o
+	rm -f $(OBJS) $(TEST_TARGETS)
+	rm -rf data
+
+.PHONY: all clean

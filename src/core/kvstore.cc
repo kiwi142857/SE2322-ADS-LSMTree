@@ -1,9 +1,11 @@
 #include "kvstore.h"
-#include "./vLog/vLog.h"
-#include "bloomFilter/bloomFilter.h"
-#include "sstable/sstable.h"
-#include "utils.h"
+#include "../vlog/vLog.h"
+#include "../utils/bloomFilter.h"
+#include "../sstable/sstable.h"
+#include "../utils/utils.h"
 #include <string>
+#include <fstream>
+#include <iostream>
 
 KVStore::KVStore(const std::string &dir, const std::string &vlog) : KVStoreAPI(dir, vlog), sstables(dir, vlog)
 {
